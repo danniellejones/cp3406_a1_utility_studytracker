@@ -35,13 +35,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onResume() {
         super.onResume()
         Log.i("SettingsFragment", "onResume called")
-//        preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(this)
     }
 
     override fun onPause() {
         super.onPause()
         Log.i("SettingsFragment", "onPause called")
-//        preferenceManager.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(this)
     }
 
     override fun onStop() {
@@ -58,14 +56,4 @@ class SettingsFragment : PreferenceFragmentCompat() {
         super.onDetach()
         Log.i("SettingsFragment", "onDetach called")
     }
-
-//    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-//        if (key == "default_time") {
-//            val defaultTime = sharedPreferences?.getString(key, "")
-//            val defaultTimeView = view?.findViewById<TextView>(R.id.default_time)
-//            val defaultTimeString = getString(R.string.default_time_with_value, defaultTime)
-//            defaultTimeView?.text = defaultTimeString
-//            Log.d("SettingsFragment", "Default time changed to: $defaultTime")
-//        }
-//    }
 }

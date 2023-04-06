@@ -10,7 +10,6 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.NavigationUI
 import androidx.preference.PreferenceManager
 
-
 /**
  * Home Fragment for the main interaction screen.
  */
@@ -25,19 +24,8 @@ class HomeFragment : Fragment(),
     ): View? {
         setHasOptionsMenu(true)
 
-//        val view = inflater.inflate(R.layout.fragment_home, container, false)
-        return inflater.inflate(R.layout.fragment_home, container, false)
-
-//        val sharedPrefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
-//        val defaultTime = sharedPrefs.getString("default_time", "Peanuts")
-//        val defaultTimeView = view?.findViewById<TextView>(R.id.default_time)
-//        val defaultTimeString = getString(R.string.default_time_with_value, defaultTime ?: "N/A")
-//        Log.d("HomeFragment", "Default time: $defaultTimeString")
-//        defaultTimeView?.text = defaultTimeString
-//        defaultTimeView = view.findViewById(R.id.default_time)
-
         // Inflate the layout for this fragment
-//        return view
+        return inflater.inflate(R.layout.fragment_home, container, false)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -66,9 +54,6 @@ class HomeFragment : Fragment(),
         Log.i("HomeFragment", "onResume called")
         PreferenceManager.getDefaultSharedPreferences(requireContext())
             .registerOnSharedPreferenceChangeListener(this)
-
-//        val defaultTime = PreferenceManager.getDefaultSharedPreferences(requireContext())
-//            .getString("default_time", "")
         updateDefaultTime()
     }
     override fun onPause() {
@@ -92,31 +77,14 @@ class HomeFragment : Fragment(),
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         if (key == "default_time_key") {
-            // Get the updated default time value
-//            val defaultTime = sharedPreferences?.getString(key, "")
-
-            // Update the default time text view
             updateDefaultTime()
         }
     }
 
     private fun updateDefaultTime() {
-
-//        val sharedPrefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
-//        val defaultTime = sharedPrefs.getString("default_time", "Peanuts")
-//        val defaultTimeView = view?.findViewById<TextView>(R.id.default_time)
-//        val defaultTimeString = getString(R.string.default_time_with_value, defaultTime ?: "N/A")
-//        defaultTimeView?.text = defaultTimeString
-//        Log.d("HomeFragment", "Default time: $defaultTimeString")
-
         val defaultTime = PreferenceManager.getDefaultSharedPreferences(requireContext()).getString("default_time_key", "")
         val defaultTimeString = getString(R.string.default_time_with_value, defaultTime ?: "N/A")
         defaultTimeView?.text = defaultTimeString
         Log.d("HomeFragment", "Default time: $defaultTimeString")
-
-//        val defaultTimeView = view?.findViewById<TextView>(R.id.default_time)
-//        val defaultTimeString = getString(R.string.default_time_with_value, defaultTime)
-//        defaultTimeView?.text = defaultTimeString
-//        Log.d("HomeFragment", "Default time: $defaultTimeString")
     }
 }
