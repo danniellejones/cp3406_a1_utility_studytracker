@@ -13,6 +13,8 @@ import android.os.Build
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.databinding.DataBindingUtil
+import kotlinx.android.synthetic.main.fragment_home.*
+
 //import cp3406.a1.studytracker.databinding.FragmentHomeBinding
 
 //import kotlinx.android.synthetic.main.fragment_home.*
@@ -52,12 +54,12 @@ class HomeFragment : Fragment() {
 //    }
 //
 //    private fun loadSettings() {
-//        val sp = PreferenceManager.getDefaultSharedPreferences(context)
+//        val sp = PreferenceManager.getDefaultSharedPreferences(getBaseContext())
 //        val defaultTime = sp.getString("default_time_key", "")
 //
 //        default_time.text = "Default time: $defaultTime"
 //    }
-
+//
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate((R.menu.options_menu), menu)
