@@ -1,7 +1,10 @@
 package cp3406.a1.studytracker
 
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.MenuItem
+import android.view.View
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.NavigationUI
@@ -11,28 +14,44 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey)
-//        setHasOptionsMenu(true)
     }
 
-//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-//        return when (item.itemId) {
-//            android.R.id.home -> {
-//                findNavController().navigateUp()
-//                true
-//            }
-//            else -> NavigationUI.onNavDestinationSelected(item, requireView().findNavController())
-//                    || super.onOptionsItemSelected(item)
-//        }
-//    }
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        Log.i("SettingsFragment", "onAttach called")
+    }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Log.i("SettingsFragment", "onCreate called")
+    }
 
-//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-//        if (item.itemId == android.R.id.home) {
-//            findNavController().navigateUp()
-//            return true
-//        }
-//        return NavigationUI.onNavDestinationSelected(item, requireView().findNavController())
-//                || super.onOptionsItemSelected(item)
-//    }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        Log.i("SettingsFragment", "onViewCreated called")
+    }
 
-
+    override fun onStart() {
+        super.onStart()
+        Log.i("SettingsFragment", "onStart called")
+    }
+    override fun onResume() {
+        super.onResume()
+        Log.i("SettingsFragment", "onResume called")
+    }
+    override fun onPause() {
+        super.onPause()
+        Log.i("SettingsFragment", "onPause called")
+    }
+    override fun onStop() {
+        super.onStop()
+        Log.i("SettingsFragment", "onStop called")
+    }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        Log.i("SettingsFragment", "onDestroyView called")
+    }
+    override fun onDetach() {
+        super.onDetach()
+        Log.i("SettingsFragment", "onDetach called")
+    }
 }
