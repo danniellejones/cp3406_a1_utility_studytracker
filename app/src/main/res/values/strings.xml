@@ -31,4 +31,5 @@
     <string name="time_format">Time 00h:00m:00s</string>
     <string name="timer_title">Timer Title</string>
     <string name="new_timer">New Timer</string>
+    <string name="remove">Remove</string>
 </resources>

@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_margin="20dp"
-    android:background="@drawable/item_border">
+
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <LinearLayout
+        android:id="@+id/item_section"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:background="@color/white"
         android:orientation="vertical">
 
         <LinearLayout
+            android:id="@+id/title_section"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/orange_medium"
@@ -76,20 +78,27 @@
                 android:id="@+id/quick_add_title"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:padding="10dp"
                 android:text="@string/quick_add"
-                android:layout_weight="1"
                 android:textSize="20sp" />
 
             <Button
                 android:id="@+id/edit_button"
                 android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 android:layout_weight="0"
+                android:background="@drawable/edit_icon"
+                android:contentDescription="@string/edit" />
+            <Button
+                android:id="@+id/delete_button"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:contentDescription="@string/edit"
-                android:background="@drawable/edit_icon">
-            </Button>
+                android:layout_gravity="end"
+                android:layout_weight="0"
+                android:text="@string/remove"
+                android:contentDescription="@string/remove" />
         </LinearLayout>
 
         <LinearLayout
@@ -130,9 +139,5 @@
                 android:minHeight="48dp"
                 android:text="@string/add" />
         </LinearLayout>
-
-
-
     </LinearLayout>
-
-</com.google.android.material.card.MaterialCardView>
+</layout>
