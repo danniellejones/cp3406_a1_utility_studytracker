@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="40dp"
+    android:orientation="vertical"
+    android:src="@drawable/item_border">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/orange_medium"
+        android:text="@string/new_timer"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textSize="20sp" />
+
+    <LinearLayout
+        android:layout_width="250dp"
+        android:padding="10dp"
+        android:maxWidth="300dp"
+        android:orientation="vertical"
+        android:layout_gravity="center"
+        android:layout_height="wrap_content">
+
+
+
+
+    <EditText
+        android:id="@+id/new_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/timer_title"
+        android:importantForAutofill="noExcludeDescendants"
+        android:inputType="text"
+        android:padding="10dp"
+        android:minHeight="48dp" />
+
+    <EditText
+        android:id="@+id/new_time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/time_format"
+        android:importantForAutofill="noExcludeDescendants"
+        android:inputType="text"
+        android:padding="10dp"
+        android:minHeight="48dp" />
+    </LinearLayout>
+
+
+</LinearLayout>

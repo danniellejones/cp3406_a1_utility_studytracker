@@ -7,7 +7,7 @@ class Datasource {
 
     fun loadStudyTimers(): List<StudyTimer> {
         return listOf(
-            StudyTimer(R.string.item_title)
+            StudyTimer("Default title", "1000")
         )
     }
 }

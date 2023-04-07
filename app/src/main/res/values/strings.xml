@@ -26,4 +26,9 @@
     <string name="minutes">Minutes</string>
     <string name="hours">Hours</string>
     <string name="play">Play</string>
+    <string name="edit">Edit</string>
+    <string name="save">Save</string>
+    <string name="time_format">Time 00h:00m:00s</string>
+    <string name="timer_title">Timer Title</string>
+    <string name="new_timer">New Timer</string>
 </resources>
