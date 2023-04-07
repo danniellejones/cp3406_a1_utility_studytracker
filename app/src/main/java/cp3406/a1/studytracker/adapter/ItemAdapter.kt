@@ -2,9 +2,11 @@ package cp3406.a1.studytracker.adapter
 
 import android.app.AlertDialog
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
@@ -14,6 +16,18 @@ import cp3406.a1.studytracker.model.StudyTimer
 
 class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) :
     RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
+
+    private var itemActionListener: OnItemActionListener? = null
+
+    fun setOnItemActionListener(listener: OnItemActionListener) {
+        itemActionListener = listener
+    }
+
+    interface OnItemActionListener {
+        fun onItemUpdated(item: StudyTimer, position: Int)
+        fun onItemRemoved(position: Int)
+    }
+
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
@@ -54,9 +68,23 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
                 when (it.itemId) {
                     R.id.edit_text -> {
                         val v = LayoutInflater.from(c).inflate(R.layout.add_item, null)
+                        val titleEditText = v.findViewById<EditText>(R.id.new_title)
+                        val timeEditText = v.findViewById<EditText>(R.id.new_time)
+                        titleEditText.setText(position.studyTimeTitle)
+                        timeEditText.setText(position.studyTimerTime)
+
                         AlertDialog.Builder(c).setView(v).setPositiveButton("Save") { dialog, _ ->
-                            position.studyTimeTitle = titleLabel.text.toString()
-                            position.studyTimerTime = timeLabel.text.toString()
+                            val newTitle = titleEditText.text.toString()
+                            val newTime = timeEditText.text.toString()
+                            position.studyTimeTitle = newTitle
+                            position.studyTimerTime = newTime
+//                            position.studyTimeTitle = titleLabel.text.toString()
+//                            position.studyTimerTime = timeLabel.text.toString()
+                            titleLabel.text = newTitle
+                            timeLabel.text = newTime
+                            Log.i("ItemAdapter", "Title: ${position.studyTimeTitle}")
+                            Log.i("ItemAdapter", "Edited: $position")
+                            itemActionListener?.onItemUpdated(position, adapterPosition)
                             notifyDataSetChanged()
                             Toast.makeText(c, "Successfully Updated", Toast.LENGTH_LONG).show()
                             dialog.dismiss()
@@ -79,6 +107,7 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
 
                             .setPositiveButton("Confirm") { dialog, _ ->
                                 dataset.removeAt(adapterPosition)
+                                itemActionListener?.onItemRemoved(adapterPosition)
                                 notifyDataSetChanged()
                                 Toast.makeText(c, "Successfully Deleted", Toast.LENGTH_LONG).show()
                                 dialog.dismiss()

@@ -25,7 +25,7 @@ import cp3406.a1.studytracker.model.StudyTimer
 /**
  * Home Fragment for the main interaction screen.
  */
-class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListener {
+class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListener, ItemAdapter.OnItemActionListener {
 
     private lateinit var itemAdapter: ItemAdapter
     private lateinit var recyclerView: RecyclerView
@@ -92,6 +92,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         // Set Adapter
         itemAdapter = ItemAdapter(requireContext(), studyTimeList)
+        itemAdapter.setOnItemActionListener(this)
         // Set Recycler view Adapter
         recyclerView.adapter = itemAdapter
 
@@ -229,5 +230,13 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         loadList()
         itemAdapter.notifyDataSetChanged()
         Log.d("HomeFragment", "After recycler view update: $studyTimeList")
+    }
+
+    override fun onItemUpdated(item: StudyTimer, position: Int) {
+        studyTimeList[position] = item
+    }
+
+    override fun onItemRemoved(position: Int) {
+        studyTimeList.removeAt(position)
     }
 }
