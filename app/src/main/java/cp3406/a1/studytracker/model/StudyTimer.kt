@@ -1,7 +1,7 @@
 package cp3406.a1.studytracker.model
 
 
-data class StudyTimer(val studyTimeTitle: String, val studyTimerTime: String)
+data class StudyTimer(var studyTimeTitle: String, var studyTimerTime: String)
 //class StudyTimer : ViewModel() {
 //    var studyTimerItems = MutableLiveData<MutableList<StudyTimerItem>>()
 //

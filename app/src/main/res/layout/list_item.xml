@@ -83,22 +83,33 @@
                 android:text="@string/quick_add"
                 android:textSize="20sp" />
 
-            <Button
-                android:id="@+id/edit_button"
+            <TextView
+                android:id="@+id/edit_or_remove_menu"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
+                android:minHeight="48sp"
+                android:minWidth="48sp"
+                android:textAlignment="center"
+                android:layout_gravity="center|end"
                 android:layout_weight="0"
-                android:background="@drawable/edit_icon"
-                android:contentDescription="@string/edit" />
-            <Button
-                android:id="@+id/delete_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_weight="0"
-                android:text="@string/remove"
-                android:contentDescription="@string/remove" />
+                android:text="Edit" />
+
+<!--            <Button-->
+<!--                android:id="@+id/edit_button"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_gravity="end"-->
+<!--                android:layout_weight="0"-->
+<!--                android:background="@drawable/edit_icon"-->
+<!--                android:contentDescription="@string/edit" />-->
+<!--            <Button-->
+<!--                android:id="@+id/delete_button"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_gravity="end"-->
+<!--                android:layout_weight="0"-->
+<!--                android:text="@string/remove"-->
+<!--                android:contentDescription="@string/remove" />-->
         </LinearLayout>
 
         <LinearLayout
