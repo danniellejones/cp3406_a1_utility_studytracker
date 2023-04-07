@@ -1,3 +1,7 @@
+/**
+ * Home fragment.
+ */
+
 package cp3406.a1.studytracker
 
 import android.app.AlertDialog
@@ -25,28 +29,23 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
 
     private lateinit var itemAdapter: ItemAdapter
     private lateinit var recyclerView: RecyclerView
-    private lateinit var studyTimeList: ArrayList<StudyTimer>
-//    private lateinit var fragmentManager: FragmentManager
+
+    //    private lateinit var studyTimeList: ArrayList<StudyTimer>
+    private var studyTimeList: ArrayList<StudyTimer> = ArrayList()
     private lateinit var sharedPreferences: SharedPreferences
-    private lateinit var defaultTimeView: TextView
+
+    //    private lateinit var defaultTimeView: TextView
     private lateinit var floatingAddButton: FloatingActionButton
 //    private lateinit var deleteButton: Button
-
-
-//    private var defaultTimeView = view?.findViewById<TextView>(R.id.default_time)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.i("HomeFragment", "onCreate called")
-//        replacementFragment(HomeFragment())
-//        updateRecyclerView()
-//        Log.i("HomeFragment", "onCreate: $studyTimeList")
-
-
-
     }
 
-    // Inflates the fragment_home layout, adds list_item layout to view and sets default from settings
+    /**
+     * Inflates the fragment_home layout, adds list_item layout to view and sets default from settings
+     */
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
@@ -54,20 +53,15 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         setHasOptionsMenu(true)
 
         val view = inflater.inflate(R.layout.fragment_home, container, false)
-        val listView = inflater.inflate(R.layout.list_item, container, false)
-        defaultTimeView = listView.findViewById(R.id.default_time)
+//        val listView = inflater.inflate(R.layout.list_item, container, false)
+//        val listView = inflater.inflate(R.layout.list_item, null)
+//        defaultTimeView = listView.findViewById(R.id.default_time)
         // add the listView to the main view
-        view.findViewById<FrameLayout>(R.id.frame_recycler_home).addView(listView)
+//        view.findViewById<FrameLayout>(R.id.frame_recycler_home).addView(listView)
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
         Log.i("HomeFragment", "OnCreateView called")
         return view
-
-
-        // Inflate the layout for this fragment
-//        return inflater.inflate(R.layout.fragment_home, container, false)
     }
-
-
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
@@ -84,15 +78,13 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
     override fun onStart() {
         super.onStart()
         Log.i("HomeFragment", "onStart called")
-        Log.d("HomeFragment", "OnStart: $studyTimeList")
-
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Set List
-        studyTimeList = ArrayList()
+        // Populate list with data from last session
+//        studyTimeList = ArrayList()
         loadList()
         Log.d("HomeFragment", "OnViewCreated: $studyTimeList")
         // Set up recycler view
@@ -107,25 +99,38 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         floatingAddButton =
             view.findViewById(R.id.floating_add_button)
         floatingAddButton.setOnClickListener { addInfo() }
+        Log.i("HomeFragment", "onViewCreated after add: $studyTimeList")
 //        deleteButton.setOnClickListener { removeStudyTimer() }
 //        itemAdapter.notifyDataSetChanged()
         Log.i("HomeFragment", "onViewCreated called")
     }
 
     private fun addInfo() {
-        val inflaterA = LayoutInflater.from(requireContext())
-        val v = inflaterA.inflate(R.layout.add_item, null)
+        val inflaterForAddItem = LayoutInflater.from(requireContext())
+        val viewForAddItem = inflaterForAddItem.inflate(R.layout.add_item, null)
 
-        val newStudyTimerTitle = v.findViewById<EditText>(R.id.new_title)
-        val newStudyTimerTime = v.findViewById<EditText>(R.id.new_time)
+        val newStudyTimerTitle = viewForAddItem.findViewById<EditText>(R.id.new_title)
+        val newStudyTimerTime = viewForAddItem.findViewById<EditText>(R.id.new_time)
         val addDialog = AlertDialog.Builder(requireContext())
-        addDialog.setView(v)
-        addDialog.setPositiveButton("Ok") { dialog, _ ->
+        addDialog.setView(viewForAddItem)
+        addDialog.setPositiveButton("Save") { dialog, _ ->
             val title = newStudyTimerTitle.text.toString()
             val timer = newStudyTimerTime.text.toString()
             studyTimeList.add(StudyTimer(title, timer))
+            var newItemTest = studyTimeList[studyTimeList.size - 1]
+//            recyclerView.getLayoutManager()?.scrollToPosition(studyTimeList.size -1)
+            Log.i("HomeFragment", "Add called: $newItemTest")
+            itemAdapter.notifyItemInserted(studyTimeList.size - 1)
 //            itemAdapter.notifyDataSetChanged()
-            itemAdapter.notifyItemInserted(studyTimeList.size -1)
+            Log.i("HomeFragment", "Recycler View: $recyclerView")
+
+            // TODO: Redundant code: required to force update of recycler view
+            //  - tried passing in as itemAdapter as parameter from onViewCreated
+            //  - tried using recyclerView.adapter
+//            recyclerView.requestLayout()
+            itemAdapter = ItemAdapter(requireContext(), studyTimeList)
+            recyclerView.adapter = itemAdapter
+
             Toast.makeText(requireContext(), "Adding", Toast.LENGTH_LONG).show()
             dialog.dismiss()
         }
@@ -134,6 +139,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         }
         addDialog.create()
         addDialog.show()
+
     }
 
 //    private fun removeStudyTimer() {
@@ -147,16 +153,22 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
 //        recyclerView.removeView(v)
 //        }
 
-   private fun saveList() {
+    /**
+     * Save data to json file from data used in recycler view.
+     */
+    private fun saveList() {
         val editor = sharedPreferences.edit()
         val gson = Gson()
         val json = gson.toJson(studyTimeList)
         editor.putString("studyTimeList", json)
         editor.apply()
-       Log.d("HomeFragment", "dataSaved")
-       Log.d("HomeFragment", "$studyTimeList")
+        Log.d("HomeFragment", "dataSaved")
+        Log.d("HomeFragment", "$studyTimeList")
     }
 
+    /**
+     * Load data from json file to populate recycler view.
+     */
     private fun loadList() {
         val gson = Gson()
         val json = sharedPreferences.getString("studyTimeList", null)
@@ -171,7 +183,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         super.onResume()
         Log.i("HomeFragment", "onResume called")
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
-        updateDefaultTime()
+//        updateDefaultTime()
         updateRecyclerView()
         Log.d("HomeFragment", "onResume: $studyTimeList")
 
@@ -208,9 +220,9 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
 
     private fun updateDefaultTime() {
         val defaultTime = sharedPreferences.getString("default_time_key", "")
-        val defaultTimeString = getString(R.string.default_time_with_value, defaultTime ?: "N/A")
-        defaultTimeView.text = defaultTimeString
-        Log.d("HomeFragment", "Default time: $defaultTimeString")
+//        val defaultTimeString = getString(R.string.default_time_with_value, defaultTime ?: "N/A")
+//        defaultTimeView.text = defaultTimeString
+        Log.d("HomeFragment", "Default time: $defaultTime")
     }
 
     private fun updateRecyclerView() {
@@ -218,11 +230,4 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         itemAdapter.notifyDataSetChanged()
         Log.d("HomeFragment", "After recycler view update: $studyTimeList")
     }
-
-//    private fun replacementFragment(homeFragment: Fragment) {
-//        val fragmentManager = supportFragmentManager
-//        val fragmentTransaction = fragmentManager.beginTransaction()
-//        fragmentTransaction.replace(R.id.tracker_recycler_view, homeFragment)
-//        fragmentTransaction.commit()
-//    }
 }
