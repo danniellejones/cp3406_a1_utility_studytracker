@@ -54,13 +54,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
     ): View? {
         super.onCreateView(inflater, container, savedInstanceState)
         setHasOptionsMenu(true)
-
         val view = inflater.inflate(R.layout.fragment_home, container, false)
-//        val listView = inflater.inflate(R.layout.list_item, container, false)
-//        val listView = inflater.inflate(R.layout.list_item, null)
-//        defaultTimeView = listView.findViewById(R.id.default_time)
-        // add the listView to the main view
-//        view.findViewById<FrameLayout>(R.id.frame_recycler_home).addView(listView)
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
         Log.i("HomeFragment", "OnCreateView called")
         return view
@@ -110,7 +104,6 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
     }
 
 
-
     private fun addNewTimer() {
         val inflaterForAddItem = LayoutInflater.from(requireContext())
         val viewForAddItem = inflaterForAddItem.inflate(R.layout.add_item, null)
@@ -120,8 +113,17 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         val addDialog = AlertDialog.Builder(requireContext())
         addDialog.setView(viewForAddItem)
         addDialog.setPositiveButton("Save") { dialog, _ ->
-            val title = newStudyTimerTitle.text.toString()
-            val timer = newStudyTimerTime.text.toString()
+            var title = newStudyTimerTitle.text.toString()
+            var timer = newStudyTimerTime.text.toString()
+
+            // Use defaults if values are not entered
+            if (title == "") {
+                title = sharedPreferences.getString("default_title_key", "").toString()
+            }
+            if (timer == "") {
+                timer = sharedPreferences.getString("default_time_key", "").toString()
+            }
+
             studyTimeList.add(StudyTimer(title, timer))
             var newItemTest = studyTimeList[studyTimeList.size - 1]
             recyclerView.getLayoutManager()?.scrollToPosition(studyTimeList.size -1)

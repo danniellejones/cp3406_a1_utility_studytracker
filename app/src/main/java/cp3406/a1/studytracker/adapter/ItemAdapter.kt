@@ -2,12 +2,15 @@ package cp3406.a1.studytracker.adapter
 
 import android.app.AlertDialog
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.CountDownTimer
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
 import cp3406.a1.studytracker.R
 import cp3406.a1.studytracker.model.StudyTimer
@@ -15,6 +18,8 @@ import java.util.concurrent.TimeUnit
 
 class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) :
     RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
+
+    private lateinit var sharedPreferences: SharedPreferences
 
     private var itemActionListener: OnItemActionListener? = null
     var onCountDownStateChangedListener: OnCountDownStateChangedListener? = null
@@ -44,11 +49,6 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
         return ItemViewHolder(adapterView)
     }
 
-    fun getIsCountingDown(): Boolean {
-        return isCountingDown
-    }
-
-
     override fun getItemCount(): Int {
         return dataset.size
     }
@@ -57,11 +57,8 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
         val item = dataset[position]
         holder.titleLabel.text = item.studyTimeTitle
         holder.timeLabel.text = item.studyTimerTime
-
-
         holder.playButton.setOnClickListener {
             Log.i("ItemAdapter", "Initialised isCountingDown = $isCountingDown")
-
             toggleCountDownPlay(holder.playButton, holder.timeLabel, item, holder)
             onCountDownStateChangedListener?.onCountDownStateChanged(isCountingDown)
         }
@@ -154,32 +151,25 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
 
                     // Set textView to zero and allow chance to edit, if not item is auto-removed
                     item.studyTimerTime = timeLabel.text.toString()
-//                    val test = item.studyTimerTime
-//                    Log.i("ItemAdapter", "New Time: $test")
-//                    itemActionListener?.onItemUpdated(item, holder.adapterPosition)
                     itemActionListener?.onItemRemoved(holder.adapterPosition)
                     notifyDataSetChanged()
                     Toast.makeText(c, "You finished, well done!", Toast.LENGTH_LONG).show()
-
                     isCountingDown = false
                     Log.i("ItemAdapter", "CountDown Stopped")
                 }
             }.start()
         } else {
             countDownTimer?.cancel()
+            // Update textView with new time
             item.studyTimerTime = timeLabel.text.toString()
-//            val test = item.studyTimerTime
-//            Log.i("ItemAdapter", "New Time: $test")
             itemActionListener?.onItemUpdated(item, holder.adapterPosition)
             notifyDataSetChanged()
-//            Toast.makeText(c, "Timer stopped", Toast.LENGTH_LONG).show()
         }
     }
 
     private fun isValidTime(timeStr: String): Boolean {
         return timeStr.matches("[\\d:]+".toRegex())
     }
-
 
     private fun formatTimeString(timeStr: String): String {
         val parts = timeStr.split(":")
@@ -192,14 +182,6 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
         }
         return formattedTimeStr
     }
-
-    fun saveIsCountingDownState(context: Context, position: Int) {
-        val sharedPrefs = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-        val editor = sharedPrefs.edit()
-        editor.putBoolean("isCountingDown_$position", isCountingDown)
-        editor.apply()
-    }
-
 
     inner class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         var titleLabel: TextView
@@ -229,8 +211,18 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
                         timeEditText.setText(position.studyTimerTime)
 
                         AlertDialog.Builder(c).setView(v).setPositiveButton("Save") { dialog, _ ->
-                            val newTitle = titleEditText.text.toString()
-                            val newTime = timeEditText.text.toString()
+                            var newTitle = titleEditText.text.toString()
+                            var newTime = timeEditText.text.toString()
+
+                            // Use defaults if values are removed through edit
+                            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(c)
+                            if (newTitle == "") {
+                                newTitle = sharedPreferences.getString("default_title_key", "").toString()
+                            }
+                            if (newTime == "") {
+                                newTime = sharedPreferences.getString("default_time_key", "").toString()
+                            }
+
                             position.studyTimeTitle = newTitle
                             position.studyTimerTime = newTime
                             titleLabel.text = newTitle
@@ -244,7 +236,6 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
                         }
                             .setNegativeButton("Cancel") { dialog, _ ->
                                 dialog.dismiss()
-
                             }
                             .create()
                             .show()
