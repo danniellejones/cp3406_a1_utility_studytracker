@@ -20,14 +20,14 @@ class MainActivity : AppCompatActivity() {
 
         // Find NavController
         val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.mainFragment) as NavHostFragment
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
         NavigationUI.setupActionBarWithNavController(this, navController)
     }
 
     /** Navigation up button set to only appear everywhere other than home fragment */
     override fun onSupportNavigateUp(): Boolean {
-        val navController = this.findNavController(R.id.mainFragment)
+        val navController = this.findNavController(R.id.nav_host_fragment)
         return if (navController.currentDestination?.id == R.id.homeFragment) {
             false
         } else {
