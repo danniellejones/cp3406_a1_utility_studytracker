@@ -6,20 +6,16 @@ package cp3406.a1.studytracker
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 
+/** Create navigation and up buttons */
 class MainActivity : AppCompatActivity() {
 
-
+    /** Create navigation */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Explicit type declaration binding
-//        val binding: ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        // Type inference binding
-//        val binding = DataBindingUtil.setContentView<ActivityMainBinding>(this, R.layout.activity_main)
         setContentView(R.layout.activity_main)
 
         // Find NavController
@@ -27,11 +23,9 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.findFragmentById(R.id.mainFragment) as NavHostFragment
         val navController = navHostFragment.navController
         NavigationUI.setupActionBarWithNavController(this, navController)
-
-        Log.i("MainActivity", "onCreate called")
     }
 
-    // Navigation up to only appear everywhere other than home fragment
+    /** Navigation up button set to only appear everywhere other than home fragment */
     override fun onSupportNavigateUp(): Boolean {
         val navController = this.findNavController(R.id.mainFragment)
         return if (navController.currentDestination?.id == R.id.homeFragment) {
