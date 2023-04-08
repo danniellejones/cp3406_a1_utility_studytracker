@@ -1,3 +1,7 @@
+/**
+ * Item Adapter for recycler view.
+ */
+
 package cp3406.a1.studytracker.adapter
 
 import android.app.AlertDialog

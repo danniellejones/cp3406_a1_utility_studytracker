@@ -1,3 +1,7 @@
+/**
+ * Settings fragment to change shared preferences.
+ */
+
 package cp3406.a1.studytracker
 
 import android.content.Context

@@ -1,5 +1,5 @@
 /**
- * Home fragment.
+ * Home fragment for holding recycler view.
  */
 
 package cp3406.a1.studytracker
