@@ -30,7 +30,7 @@
     <string name="save">Save</string>
     <string name="time_format">Time dd:hh:mm:ss</string>
     <string name="timer_title">Timer Title</string>
-    <string name="new_timer">New Timer</string>
+    <string name="new_timer">Add Study New Timer</string>
     <string name="remove">Remove</string>
     <string name="edit_text">Edit Text</string>
     <string name="delete">Delete</string>
