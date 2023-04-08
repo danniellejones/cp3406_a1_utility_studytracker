@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <LinearLayout
         android:id="@+id/item_section"
@@ -109,42 +110,47 @@
 
             <EditText
                 android:id="@+id/input_hour"
-                android:layout_width="80dp"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
-                android:layout_weight="1"
+                android:layout_weight="2"
                 android:background="@color/grey_light"
                 android:elevation="8dp"
                 android:hint="@string/hours"
                 android:importantForAutofill="noExcludeDescendants"
                 android:inputType="number"
+                android:maxWidth="100dp"
                 android:maxLength="2"
-                android:minWidth="200dp"
                 android:minHeight="48dp"
-                android:textAlignment="center" />
+                android:textAlignment="center"
+                tools:ignore="VisualLintTextFieldSize" />
 
             <EditText
                 android:id="@+id/input_minute"
-                android:layout_width="80dp"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
-                android:layout_weight="1"
+                android:layout_weight="2"
                 android:background="@color/grey_light"
                 android:elevation="8dp"
                 android:hint="@string/minutes"
                 android:importantForAutofill="noExcludeDescendants"
                 android:inputType="number"
+                android:maxWidth="100dp"
                 android:maxLength="2"
-                android:minWidth="200dp"
                 android:minHeight="48dp"
-                android:textAlignment="center" />
+                android:textAlignment="center"
+                tools:ignore="VisualLintTextFieldSize" />
 
             <Button
                 android:id="@+id/quick_add_button"
-                android:layout_width="80dp"
+                android:layout_width="50dp"
                 android:layout_height="match_parent"
                 android:layout_margin="5dp"
-                android:text="@string/add" />
+                android:layout_weight="1"
+                android:maxWidth="100dp"
+                android:text="@string/add"
+                tools:ignore="VisualLintButtonSize" />
 
         </LinearLayout>
 
