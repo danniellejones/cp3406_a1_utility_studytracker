@@ -1,32 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<layout
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
 
     <LinearLayout
         android:id="@+id/item_section"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        android:background="@color/white"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="20dp"
+        android:background="?attr/colorOnPrimary"
+        android:elevation="20dp"
         android:orientation="vertical">
 
         <LinearLayout
             android:id="@+id/title_section"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/orange_medium"
+            android:background="?attr/colorSecondaryVariant"
             android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/item_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
                 android:layout_weight="1"
                 android:padding="10dp"
                 android:text="@string/item_title"
-                android:textAlignment="center"
-                android:textColor="@color/black"
+                android:textAlignment="textStart"
+                android:textColor="?attr/colorOnSecondary"
                 android:textSize="20sp" />
 
             <Button
@@ -36,7 +39,12 @@
                 android:layout_gravity="end"
                 android:layout_weight="0"
                 android:background="@drawable/play_icon"
-                android:contentDescription="@string/play" />
+                android:backgroundTint="?attr/colorOnSecondary"
+                android:contentDescription="@string/play"
+                android:drawableTint="?attr/colorOnPrimary"
+                android:elevation="20dp"
+                android:maxWidth="50dp" />
+
         </LinearLayout>
 
         <TextView
@@ -46,28 +54,19 @@
             android:padding="10dp"
             android:text="@string/start_time"
             android:textAlignment="center"
-            android:textColor="@color/black"
-            android:textSize="60sp" />
+            android:textColor="?attr/colorOnSecondary"
+            android:textSize="55sp" />
 
-        <!--    Progress to goal study time-->
         <ProgressBar
             android:id="@+id/progress_bar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:elevation="8dp"
             android:max="100"
             android:padding="10dp"
             android:progress="100" />
-
-        <TextView
-            android:id="@+id/default_time"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:text="@string/default_time_with_value"
-            android:textAlignment="center"
-            android:textSize="20sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -78,6 +77,7 @@
                 android:id="@+id/quick_add_title"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
                 android:layout_weight="1"
                 android:padding="10dp"
                 android:text="@string/quick_add"
@@ -87,71 +87,67 @@
                 android:id="@+id/edit_or_remove_menu"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:minHeight="48sp"
-                android:minWidth="48sp"
-                android:textAlignment="center"
-                android:layout_gravity="center|end"
+                android:layout_gravity="end"
                 android:layout_weight="0"
-                android:text="Edit" />
+                android:minWidth="48sp"
+                android:minHeight="48sp"
+                android:padding="10dp"
+                android:text="@string/edit"
+                android:textAlignment="textEnd"
+                android:textColor="?attr/colorPrimaryVariant"
+                android:textSize="20sp" />
 
-<!--            <Button-->
-<!--                android:id="@+id/edit_button"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_gravity="end"-->
-<!--                android:layout_weight="0"-->
-<!--                android:background="@drawable/edit_icon"-->
-<!--                android:contentDescription="@string/edit" />-->
-<!--            <Button-->
-<!--                android:id="@+id/delete_button"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_gravity="end"-->
-<!--                android:layout_weight="0"-->
-<!--                android:text="@string/remove"-->
-<!--                android:contentDescription="@string/remove" />-->
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:background="@color/orange_light"
+            android:orientation="horizontal"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
 
             <EditText
                 android:id="@+id/input_hour"
-                android:layout_width="100dp"
+                android:layout_width="80dp"
                 android:layout_height="wrap_content"
-                android:layout_margin="2dp"
+                android:layout_margin="5dp"
                 android:layout_weight="1"
-                android:maxLength="2"
                 android:background="@color/grey_light"
+                android:elevation="8dp"
                 android:hint="@string/hours"
                 android:importantForAutofill="noExcludeDescendants"
                 android:inputType="number"
+                android:maxLength="2"
+                android:minWidth="200dp"
                 android:minHeight="48dp"
                 android:textAlignment="center" />
 
             <EditText
                 android:id="@+id/input_minute"
-                android:layout_width="100dp"
+                android:layout_width="80dp"
                 android:layout_height="wrap_content"
-                android:layout_margin="2dp"
+                android:layout_margin="5dp"
                 android:layout_weight="1"
-                android:maxLength="2"
                 android:background="@color/grey_light"
+                android:elevation="8dp"
                 android:hint="@string/minutes"
                 android:importantForAutofill="noExcludeDescendants"
                 android:inputType="number"
+                android:maxLength="2"
+                android:minWidth="200dp"
                 android:minHeight="48dp"
                 android:textAlignment="center" />
 
             <Button
                 android:id="@+id/quick_add_button"
-                android:layout_width="100dp"
+                android:layout_width="80dp"
                 android:layout_height="match_parent"
-                android:layout_margin="2dp"
-                android:minHeight="48dp"
+                android:layout_margin="5dp"
                 android:text="@string/add" />
+
         </LinearLayout>
+
     </LinearLayout>
+
 </layout>
