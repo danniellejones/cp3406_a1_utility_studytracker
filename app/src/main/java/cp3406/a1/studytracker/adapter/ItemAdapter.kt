@@ -61,40 +61,35 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
 
         holder.playButton.setOnClickListener {
             Log.i("ItemAdapter", "Initialised isCountingDown = $isCountingDown")
-            isCountingDown = !isCountingDown
-            toggleCountDownPlay(holder.playButton, holder.timeLabel)
-//            if (isCountingDown) {
-//                isCountingDown = false
-//                saveIsCountingDownState(c, position)
-////            countDownTimer.finish()
-////                holder.playButton.background = c.resources.getDrawable(R.drawable.play_icon)
-//                Log.i("ItemAdapter", "CountDown Stopped")
-//            } else {
-//                isCountingDown = true
-//                saveIsCountingDownState(c, position)
-////            countDownTimer.start()
-////                holder.playButton.background = c.resources.getDrawable(R.drawable.stop_icon)
-//                Log.i("ItemAdapter", "CountDown Started")
-//            }
+
+            toggleCountDownPlay(holder.playButton, holder.timeLabel, item, holder)
             onCountDownStateChangedListener?.onCountDownStateChanged(isCountingDown)
         }
     }
 
-    private fun toggleCountDownPlay(countDownButton: Button, timeLabel: TextView) {
+    private fun toggleCountDownPlay(countDownButton: Button, timeLabel: TextView, item: StudyTimer, holder: ItemViewHolder) {
         // Change from play to stop icon
+        isCountingDown = !isCountingDown
         countDownButton.setBackgroundResource(if (isCountingDown) R.drawable.stop_icon else R.drawable.play_icon)
-        Log.i("ItemAdapter", "isCountingDown = $isCountingDown")
-        // Retrieve the textView entered time and start/stop timer
+
+        // Retrieve the entered time and start/stop timer
+        Log.i("ItemAdapter", "HERE isCountingDown = $isCountingDown")
         if (isCountingDown) {
+
             Log.i("ItemAdapter", "CountDown Started")
+
+            //Retrieve, validate text is in time format and format for use
             var timeStr = timeLabel.text.toString().trim()
             if (!isValidTime(timeStr)) {
                 Log.d("ItemAdapter", "Invalid time format: $timeStr")
+                isCountingDown = false
                 return
             }
             timeStr = formatTimeString(timeStr)
+
             Log.i("ItemAdapter", "timeStr: $timeStr")
 
+            // Split string from text view and assign to days, hours, minutes and seconds
             val timeUnits = mutableListOf("sDays", "sHours", "sMins", "sSecs")
             val timeValues = timeStr.split(":").toTypedArray()
 
@@ -114,69 +109,24 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
             Log.d("ItemAdapter", "minutesStr = $sMins")
             Log.d("ItemAdapter", "secondsStr = $sSecs")
 
+            // Convert and calculate milliseconds for count down timer
             val daysInMs: Long = TimeUnit.DAYS.toMillis(sDays.toLong())
             val hoursInMs: Long = TimeUnit.HOURS.toMillis(sHours.toLong())
             val minutesInMs: Long = TimeUnit.MINUTES.toMillis(sMins.toLong())
             val secondsInMs: Long = TimeUnit.SECONDS.toMillis(sSecs.toLong())
 
-
-//            val longConversionDays: Long = timeStr.substringBefore(":").toLong()
-//            val sDays: String = timeStr.substringBefore(":")
-//            val daysInMs: Long = TimeUnit.DAYS.toMillis(longConversionDays)
             Log.d("ItemAdapter", "daysinms = $daysInMs")
-//            Log.d("ItemAdapter", "daysLong = $longConversionDays")
-//            Log.d("ItemAdapter", "daysStr = $sDays")
-
-//            val lHours: Long =
-//                timeStr.substringAfter(":").substringBefore(":").toLong()
-//            val sHours: String =
-//                timeStr.substringAfter(":").substringBefore(":")
-//            val hoursInMs: Long = TimeUnit.HOURS.toMillis(lHours)
             Log.d("ItemAdapter", "hoursinms = $hoursInMs")
-//            Log.d("ItemAdapter", "hoursLong = $lHours")
-//            Log.d("ItemAdapter", "hoursStr = $sHours")
-
-//            val longConversionMins: Long =
-//                timeStr.substringAfterLast(":").substringBeforeLast(":").toLong()
-//            val sMins: String =
-//                timeStr.substringAfterLast(":").substringBeforeLast(":")
-//            val minutesInMs: Long = TimeUnit.MINUTES.toMillis(longConversionMins)
             Log.d("ItemAdapter", "minutesinms = $minutesInMs")
-//            Log.d("ItemAdapter", "minutesLong = $longConversionMins")
-//            Log.d("ItemAdapter", "minutesStr = $sMins")
-
-//            val longConversionSecs: Long =
-//                timeStr.substringAfter(":").substringAfterLast(":").toLong()
-//            val sSecs: String =
-//                timeStr.substringAfter(":").substringAfterLast(":")
-//            val secondsInMs: Long = TimeUnit.SECONDS.toMillis(longConversionSecs)
             Log.d("ItemAdapter", "secondssinms = $secondsInMs")
-//            Log.d("ItemAdapter", "secondsLong = $longConversionSecs")
-//            Log.d("ItemAdapter", "secondsStr = $sSecs")
 
             val timeMillis: Long = daysInMs + hoursInMs + minutesInMs + secondsInMs
-
-
-//            val timeMillis: Long = if (":" in timeStr) {
-//                TimeUnit.DAYS.toMillis(
-//                    timeStr.substringBefore(":").toLong()
-//                ) + TimeUnit.HOURS.toMillis(
-//                    timeStr.substringAfter(":").substringBefore(":").toLong()
-//                ) + TimeUnit.MINUTES.toMillis(
-//                    timeStr.substringAfterLast(":").toLong()
-//                ) + TimeUnit.SECONDS.toMillis(
-//                    timeStr.substringAfter(":").substringAfterLast(":").toLong()
-//                )
-//            } else {
-//                TimeUnit.SECONDS.toMillis(timeStr.toLong())
-//            }
-
-            // Time in milliseconds rounded to the nearest second
             countDownTime = timeMillis
             val test: Long = timeMillis
             Log.i("ItemAdapter", "timeMillis: $test")
-//            countDownTime = TimeUnit.MILLISECONDS.toSeconds(timeMillis + 500)
             countDownTimeLeft = countDownTime
+
+            // Use count down timer and display on text view
             countDownTimer = object : CountDownTimer(countDownTimeLeft, 1000) {
 
                 override fun onTick(millisUntilFinished: Long) {
@@ -195,31 +145,34 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
                             minutes
                         ) - TimeUnit.HOURS.toSeconds(hours) - TimeUnit.DAYS.toSeconds(days)
 
-
                     timeLabel.text =
                         String.format("%02d:%02d:%02d:%02d", days, hours, minutes, seconds)
                 }
-
-//                val timeString = if (days > 0) {
-//                    String.format("%dd %02d:%02d:%02d", days, hours, minutes, seconds)
-//                } else if (hours > 0) {
-//                    String.format("%dh %02d:%02d:%02d", hours, minutes, seconds)
-//                } else if (minutes > 0) {
-//                    String.format("%dm %02d:%02d", minutes, seconds)
-//                } else {
-//                    String.format("%ds", seconds)
-//                }
-
-
                 override fun onFinish() {
+                    println("Finished")
                     countDownButton.setBackgroundResource(R.drawable.play_icon)
+
+                    // Set textView to zero and allow chance to edit, if not item is auto-removed
+                    item.studyTimerTime = timeLabel.text.toString()
+//                    val test = item.studyTimerTime
+//                    Log.i("ItemAdapter", "New Time: $test")
+//                    itemActionListener?.onItemUpdated(item, holder.adapterPosition)
+                    itemActionListener?.onItemRemoved(holder.adapterPosition)
+                    notifyDataSetChanged()
+                    Toast.makeText(c, "You finished, well done!", Toast.LENGTH_LONG).show()
+
                     isCountingDown = false
-                    // TODO: Do something when countdown finishes here
                     Log.i("ItemAdapter", "CountDown Stopped")
                 }
             }.start()
         } else {
             countDownTimer?.cancel()
+            item.studyTimerTime = timeLabel.text.toString()
+//            val test = item.studyTimerTime
+//            Log.i("ItemAdapter", "New Time: $test")
+            itemActionListener?.onItemUpdated(item, holder.adapterPosition)
+            notifyDataSetChanged()
+//            Toast.makeText(c, "Timer stopped", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -231,6 +184,7 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
     private fun formatTimeString(timeStr: String): String {
         val parts = timeStr.split(":")
         val formattedTimeStr: String = when (parts.size) {
+            1 -> "0:0:0:$timeStr"
             2 -> "0:0:${parts[0]}:${parts[1]}"
             3 -> "0:${parts[0]}:${parts[1]}:${parts[2]}"
             4 -> timeStr
