@@ -2,22 +2,27 @@ package cp3406.a1.studytracker.adapter
 
 import android.app.AlertDialog
 import android.content.Context
+import android.os.CountDownTimer
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.PopupMenu
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
 import cp3406.a1.studytracker.R
 import cp3406.a1.studytracker.model.StudyTimer
+import java.util.concurrent.TimeUnit
 
 class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) :
     RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
 
     private var itemActionListener: OnItemActionListener? = null
+    var onCountDownStateChangedListener: OnCountDownStateChangedListener? = null
+    private var isCountingDown: Boolean = false
+    private var countDownTimer: CountDownTimer? = null
+    private var countDownTime: Long = 0
+    private var countDownTimeLeft: Long = 0
+
 
     fun setOnItemActionListener(listener: OnItemActionListener) {
         itemActionListener = listener
@@ -28,7 +33,9 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
         fun onItemRemoved(position: Int)
     }
 
-
+    interface OnCountDownStateChangedListener {
+        fun onCountDownStateChanged(isCountingDown: Boolean)
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
         val adapterView =
@@ -36,6 +43,11 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
 
         return ItemViewHolder(adapterView)
     }
+
+    fun getIsCountingDown(): Boolean {
+        return isCountingDown
+    }
+
 
     override fun getItemCount(): Int {
         return dataset.size
@@ -45,12 +57,201 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
         val item = dataset[position]
         holder.titleLabel.text = item.studyTimeTitle
         holder.timeLabel.text = item.studyTimerTime
+
+
+        holder.playButton.setOnClickListener {
+            Log.i("ItemAdapter", "Initialised isCountingDown = $isCountingDown")
+            isCountingDown = !isCountingDown
+            toggleCountDownPlay(holder.playButton, holder.timeLabel)
+//            if (isCountingDown) {
+//                isCountingDown = false
+//                saveIsCountingDownState(c, position)
+////            countDownTimer.finish()
+////                holder.playButton.background = c.resources.getDrawable(R.drawable.play_icon)
+//                Log.i("ItemAdapter", "CountDown Stopped")
+//            } else {
+//                isCountingDown = true
+//                saveIsCountingDownState(c, position)
+////            countDownTimer.start()
+////                holder.playButton.background = c.resources.getDrawable(R.drawable.stop_icon)
+//                Log.i("ItemAdapter", "CountDown Started")
+//            }
+            onCountDownStateChangedListener?.onCountDownStateChanged(isCountingDown)
+        }
     }
+
+    private fun toggleCountDownPlay(countDownButton: Button, timeLabel: TextView) {
+        // Change from play to stop icon
+        countDownButton.setBackgroundResource(if (isCountingDown) R.drawable.stop_icon else R.drawable.play_icon)
+        Log.i("ItemAdapter", "isCountingDown = $isCountingDown")
+        // Retrieve the textView entered time and start/stop timer
+        if (isCountingDown) {
+            Log.i("ItemAdapter", "CountDown Started")
+            var timeStr = timeLabel.text.toString().trim()
+            if (!isValidTime(timeStr)) {
+                Log.d("ItemAdapter", "Invalid time format: $timeStr")
+                return
+            }
+            timeStr = formatTimeString(timeStr)
+            Log.i("ItemAdapter", "timeStr: $timeStr")
+
+            val timeUnits = mutableListOf("sDays", "sHours", "sMins", "sSecs")
+            val timeValues = timeStr.split(":").toTypedArray()
+
+            for (i in timeUnits.indices) {
+                val unit = timeUnits[i]
+                val value = if (i < timeValues.size) timeValues[i] else "00"
+                println("$unit: $value")
+            }
+
+            val sDays: String = timeValues[0]
+            val sHours: String = timeValues[1]
+            val sMins: String = timeValues[2]
+            val sSecs: String = timeValues[3]
+
+            Log.d("ItemAdapter", "daysStr = $sDays")
+            Log.d("ItemAdapter", "hoursStr = $sHours")
+            Log.d("ItemAdapter", "minutesStr = $sMins")
+            Log.d("ItemAdapter", "secondsStr = $sSecs")
+
+            val daysInMs: Long = TimeUnit.DAYS.toMillis(sDays.toLong())
+            val hoursInMs: Long = TimeUnit.HOURS.toMillis(sHours.toLong())
+            val minutesInMs: Long = TimeUnit.MINUTES.toMillis(sMins.toLong())
+            val secondsInMs: Long = TimeUnit.SECONDS.toMillis(sSecs.toLong())
+
+
+//            val longConversionDays: Long = timeStr.substringBefore(":").toLong()
+//            val sDays: String = timeStr.substringBefore(":")
+//            val daysInMs: Long = TimeUnit.DAYS.toMillis(longConversionDays)
+            Log.d("ItemAdapter", "daysinms = $daysInMs")
+//            Log.d("ItemAdapter", "daysLong = $longConversionDays")
+//            Log.d("ItemAdapter", "daysStr = $sDays")
+
+//            val lHours: Long =
+//                timeStr.substringAfter(":").substringBefore(":").toLong()
+//            val sHours: String =
+//                timeStr.substringAfter(":").substringBefore(":")
+//            val hoursInMs: Long = TimeUnit.HOURS.toMillis(lHours)
+            Log.d("ItemAdapter", "hoursinms = $hoursInMs")
+//            Log.d("ItemAdapter", "hoursLong = $lHours")
+//            Log.d("ItemAdapter", "hoursStr = $sHours")
+
+//            val longConversionMins: Long =
+//                timeStr.substringAfterLast(":").substringBeforeLast(":").toLong()
+//            val sMins: String =
+//                timeStr.substringAfterLast(":").substringBeforeLast(":")
+//            val minutesInMs: Long = TimeUnit.MINUTES.toMillis(longConversionMins)
+            Log.d("ItemAdapter", "minutesinms = $minutesInMs")
+//            Log.d("ItemAdapter", "minutesLong = $longConversionMins")
+//            Log.d("ItemAdapter", "minutesStr = $sMins")
+
+//            val longConversionSecs: Long =
+//                timeStr.substringAfter(":").substringAfterLast(":").toLong()
+//            val sSecs: String =
+//                timeStr.substringAfter(":").substringAfterLast(":")
+//            val secondsInMs: Long = TimeUnit.SECONDS.toMillis(longConversionSecs)
+            Log.d("ItemAdapter", "secondssinms = $secondsInMs")
+//            Log.d("ItemAdapter", "secondsLong = $longConversionSecs")
+//            Log.d("ItemAdapter", "secondsStr = $sSecs")
+
+            val timeMillis: Long = daysInMs + hoursInMs + minutesInMs + secondsInMs
+
+
+//            val timeMillis: Long = if (":" in timeStr) {
+//                TimeUnit.DAYS.toMillis(
+//                    timeStr.substringBefore(":").toLong()
+//                ) + TimeUnit.HOURS.toMillis(
+//                    timeStr.substringAfter(":").substringBefore(":").toLong()
+//                ) + TimeUnit.MINUTES.toMillis(
+//                    timeStr.substringAfterLast(":").toLong()
+//                ) + TimeUnit.SECONDS.toMillis(
+//                    timeStr.substringAfter(":").substringAfterLast(":").toLong()
+//                )
+//            } else {
+//                TimeUnit.SECONDS.toMillis(timeStr.toLong())
+//            }
+
+            // Time in milliseconds rounded to the nearest second
+            countDownTime = timeMillis
+            val test: Long = timeMillis
+            Log.i("ItemAdapter", "timeMillis: $test")
+//            countDownTime = TimeUnit.MILLISECONDS.toSeconds(timeMillis + 500)
+            countDownTimeLeft = countDownTime
+            countDownTimer = object : CountDownTimer(countDownTimeLeft, 1000) {
+
+                override fun onTick(millisUntilFinished: Long) {
+                    countDownTimeLeft = millisUntilFinished
+                    val days = TimeUnit.MILLISECONDS.toDays(millisUntilFinished)
+                    val hours =
+                        TimeUnit.MILLISECONDS.toHours(millisUntilFinished) - TimeUnit.DAYS.toHours(
+                            days
+                        )
+                    val minutes =
+                        TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) - TimeUnit.HOURS.toMinutes(
+                            hours
+                        ) - TimeUnit.DAYS.toMinutes(days)
+                    val seconds =
+                        TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) - TimeUnit.MINUTES.toSeconds(
+                            minutes
+                        ) - TimeUnit.HOURS.toSeconds(hours) - TimeUnit.DAYS.toSeconds(days)
+
+
+                    timeLabel.text =
+                        String.format("%02d:%02d:%02d:%02d", days, hours, minutes, seconds)
+                }
+
+//                val timeString = if (days > 0) {
+//                    String.format("%dd %02d:%02d:%02d", days, hours, minutes, seconds)
+//                } else if (hours > 0) {
+//                    String.format("%dh %02d:%02d:%02d", hours, minutes, seconds)
+//                } else if (minutes > 0) {
+//                    String.format("%dm %02d:%02d", minutes, seconds)
+//                } else {
+//                    String.format("%ds", seconds)
+//                }
+
+
+                override fun onFinish() {
+                    countDownButton.setBackgroundResource(R.drawable.play_icon)
+                    isCountingDown = false
+                    // TODO: Do something when countdown finishes here
+                    Log.i("ItemAdapter", "CountDown Stopped")
+                }
+            }.start()
+        } else {
+            countDownTimer?.cancel()
+        }
+    }
+
+    private fun isValidTime(timeStr: String): Boolean {
+        return timeStr.matches("[\\d:]+".toRegex())
+    }
+
+
+    private fun formatTimeString(timeStr: String): String {
+        val parts = timeStr.split(":")
+        val formattedTimeStr: String = when (parts.size) {
+            2 -> "0:0:${parts[0]}:${parts[1]}"
+            3 -> "0:${parts[0]}:${parts[1]}:${parts[2]}"
+            4 -> timeStr
+            else -> "0:0:0:0"
+        }
+        return formattedTimeStr
+    }
+
+    fun saveIsCountingDownState(context: Context, position: Int) {
+        val sharedPrefs = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        val editor = sharedPrefs.edit()
+        editor.putBoolean("isCountingDown_$position", isCountingDown)
+        editor.apply()
+    }
+
 
     inner class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         var titleLabel: TextView
         val timeLabel: TextView
         var erMenu: TextView
+        val playButton: Button = itemView.findViewById(R.id.play_button)
 
 
         init {
@@ -78,8 +279,6 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
                             val newTime = timeEditText.text.toString()
                             position.studyTimeTitle = newTitle
                             position.studyTimerTime = newTime
-//                            position.studyTimeTitle = titleLabel.text.toString()
-//                            position.studyTimerTime = timeLabel.text.toString()
                             titleLabel.text = newTitle
                             timeLabel.text = newTime
                             Log.i("ItemAdapter", "Title: ${position.studyTimeTitle}")

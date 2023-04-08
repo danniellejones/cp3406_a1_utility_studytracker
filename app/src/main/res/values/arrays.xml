@@ -7,8 +7,8 @@
     </string-array>
 
     <string-array name="default_time_values">
-        <item>0.5</item>
-        <item>1</item>
-        <item>10</item>
+        <item>00:30</item>
+        <item>01:00</item>
+        <item>10:00</item>
     </string-array>
 </resources>

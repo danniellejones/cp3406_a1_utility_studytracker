@@ -14,7 +14,7 @@
             app:title="Default time for new entry"
             app:entries="@array/default_time_entries"
             app:entryValues="@array/default_time_values"
-            app:defaultValue="0.5"
+            app:defaultValue="00:00:30"
             app:useSimpleSummaryProvider="true"/>
 
     </PreferenceCategory>
