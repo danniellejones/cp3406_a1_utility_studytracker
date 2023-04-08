@@ -1,5 +1,6 @@
 /**
  * Item Adapter for recycler view.
+ * Known warnings: Reflective access to mPopup; Use of notifyDataSetChanged
  */
 
 package cp3406.a1.studytracker.adapter
@@ -19,11 +20,13 @@ import cp3406.a1.studytracker.R
 import cp3406.a1.studytracker.model.StudyTimer
 import java.util.concurrent.TimeUnit
 
+private const val finishedProgressNumber = 0
 
-class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) :
+/** Set up item adapter for recycle view */
+class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableList<StudyTimer>) :
     RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
 
-    var onCountDownStateChangedListener: OnCountDownStateChangedListener? = null
+    private var onCountDownStateChangedListener: OnCountDownStateChangedListener? = null
     private var itemActionListener: OnItemActionListener? = null
     private var countDownTimer: CountDownTimer? = null
     private var isCountingDown: Boolean = false
@@ -31,33 +34,39 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
     private var countDownTimeLeft: Long = 0
     private lateinit var sharedPreferences: SharedPreferences
 
-    fun setOnItemActionListener(listener: OnItemActionListener) {
-        itemActionListener = listener
-    }
-
     /** Allow edit and remove of items from the recyclerview */
     interface OnItemActionListener {
         fun onItemUpdated(item: StudyTimer, position: Int)
         fun onItemRemoved(position: Int)
     }
 
+    /** Share with home fragment state of count down play and stop */
     interface OnCountDownStateChangedListener {
         fun onCountDownStateChanged(isCountingDown: Boolean)
     }
 
+    /** Listen for updates to the itemAdapter */
+    fun setOnItemActionListener(listener: OnItemActionListener) {
+        itemActionListener = listener
+    }
+
     /** Reusable Dialog Box for warning and error messages to user */
-    fun displayWarningAlertDialog(alertTitle: String, message: String) {
-        val builder = AlertDialog.Builder(c)
+    private fun displayWarningAlertDialog(titleResourceId: Int, messageResourceId: Int) {
+        val title = itemAdapterContext.getString(titleResourceId)
+        val message = itemAdapterContext.getString(messageResourceId)
+
+        val builder = AlertDialog.Builder(itemAdapterContext)
         builder.setIcon(R.drawable.warning_icon)
-        builder.setTitle(alertTitle)
+        builder.setTitle(title)
         builder.setMessage(message)
-        builder.setPositiveButton("OK") { dialog,_->
+        builder.setPositiveButton("OK") { dialog, _ ->
             dialog.dismiss()
         }
         builder.create()
         builder.show()
     }
 
+    /** Inflate and create new instance of ItemViewHolder class for each item in RecyclerView*/
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
         val adapterView =
             LayoutInflater.from(parent.context).inflate(R.layout.list_item, parent, false)
@@ -70,6 +79,7 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
         return dataset.size
     }
 
+    /** Hold data to views, add time using quick add and toggle play timer on/off */
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
 
         val item = dataset[position]
@@ -79,6 +89,8 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
 
         // Quick add hours and minutes from edit text views by pressing button
         holder.quickAddButton.setOnClickListener {
+
+            // Get input from edit text views
             val hoursStrFromQuickAdd =
                 holder.inputHours?.text?.toString()?.takeIf(String::isNotBlank) ?: "0"
             val minutesStrFromQuickAdd =
@@ -86,14 +98,16 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
             val hoursFromQuickAdd = hoursStrFromQuickAdd.toInt()
             val minutesFromQuickAdd = minutesStrFromQuickAdd.toInt()
             var timeStr = holder.timeLabel.text?.toString()
-            timeStr = formatTimeString(timeStr as String)
-            Log.d("ItemAdapter", "Str Quick Orig: $timeStr")
 
+            // Format and calculate the time difference
+            timeStr = formatTimeString(timeStr as String)
             val timeStrToAdd =
                 String.format("00:%02d:%02d:00", hoursFromQuickAdd, minutesFromQuickAdd)
             Log.d("ItemAdapter", "Str Quick Add: $timeStrToAdd")
             val totalSeconds = calculateTimeDifferenceInSeconds(timeStr, timeStrToAdd)
             val newTimeString = convertTimeInSecondsToString(totalSeconds)
+
+            // Update item with new time, clear input fields and update recycler view
             item.studyTimerTime = newTimeString
             holder.inputHours?.text?.clear()
             holder.inputMinutes?.text?.clear()
@@ -103,7 +117,6 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
 
         // When play button is clicked start count down timer and update related views and data
         holder.playButton.setOnClickListener {
-//            Log.i("ItemAdapter", "Initialised isCountingDown = $isCountingDown")
             toggleCountDownPlay(holder.playButton, holder.timeLabel, item, holder, progressBar)
             onCountDownStateChangedListener?.onCountDownStateChanged(isCountingDown)
         }
@@ -154,20 +167,22 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
         holder: ItemViewHolder,
         progressBar: ProgressBar
     ) {
-        // Change from play to stop icon
+        // Change state and toggle to play or stop icon
         isCountingDown = !isCountingDown
         countDownButton.setBackgroundResource(if (isCountingDown) R.drawable.stop_icon else R.drawable.play_icon)
 
         // Retrieve the entered time and start/stop timer
-        Log.i("ItemAdapter", "HERE isCountingDown = $isCountingDown")
         if (isCountingDown) {
-
             Log.i("ItemAdapter", "CountDown Started")
 
             //Retrieve, validate text is in time format and format for use
             var timeStr = timeLabel.text.toString().trim()
             if (!isValidTime(timeStr)) {
                 Log.d("ItemAdapter", "Invalid time format: $timeStr")
+                displayWarningAlertDialog(
+                    R.string.invalid_time_entered_title,
+                    R.string.invalid_time_entered_message
+                )
                 isCountingDown = false
                 return
             }
@@ -176,7 +191,8 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
             Log.i("ItemAdapter", "timeStr: $timeStr")
 
             // Split string from text view and assign to days, hours, minutes and seconds
-            val timeUnits = mutableListOf("sDays", "sHours", "sMins", "sSecs")
+            val timeUnits =
+                mutableListOf("stringDays", "stringHours", "stringMinutes", "stringSeconds")
             val timeValues = timeStr.split(":").toTypedArray()
 
             for (i in timeUnits.indices) {
@@ -185,26 +201,16 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
                 println("$unit: $value")
             }
 
-            val sDays: String = timeValues[0]
-            val sHours: String = timeValues[1]
-            val sMins: String = timeValues[2]
-            val sSecs: String = timeValues[3]
-
-            Log.d("ItemAdapter", "daysStr = $sDays")
-            Log.d("ItemAdapter", "hoursStr = $sHours")
-            Log.d("ItemAdapter", "minutesStr = $sMins")
-            Log.d("ItemAdapter", "secondsStr = $sSecs")
+            val stringDays: String = timeValues[0]
+            val stringHours: String = timeValues[1]
+            val stringMinutes: String = timeValues[2]
+            val stringSeconds: String = timeValues[3]
 
             // Convert and calculate milliseconds for count down timer
-            val daysInMs: Long = TimeUnit.DAYS.toMillis(sDays.toLong())
-            val hoursInMs: Long = TimeUnit.HOURS.toMillis(sHours.toLong())
-            val minutesInMs: Long = TimeUnit.MINUTES.toMillis(sMins.toLong())
-            val secondsInMs: Long = TimeUnit.SECONDS.toMillis(sSecs.toLong())
-
-            Log.d("ItemAdapter", "daysinms = $daysInMs")
-            Log.d("ItemAdapter", "hoursinms = $hoursInMs")
-            Log.d("ItemAdapter", "minutesinms = $minutesInMs")
-            Log.d("ItemAdapter", "secondssinms = $secondsInMs")
+            val daysInMs: Long = TimeUnit.DAYS.toMillis(stringDays.toLong())
+            val hoursInMs: Long = TimeUnit.HOURS.toMillis(stringHours.toLong())
+            val minutesInMs: Long = TimeUnit.MINUTES.toMillis(stringMinutes.toLong())
+            val secondsInMs: Long = TimeUnit.SECONDS.toMillis(stringSeconds.toLong())
 
             val timeMillis: Long = daysInMs + hoursInMs + minutesInMs + secondsInMs
             countDownTime = timeMillis
@@ -235,21 +241,22 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
                     val updatedProgress =
                         (((millisUntilFinished.toFloat() / countDownTime) * 100)).toInt()
                     progressBar.progress = updatedProgress
-//                    Log.i("ItemAdapter", "Progress: $updatedProgress")
                     timeLabel.text =
                         String.format("%02d:%02d:%02d:%02d", days, hours, minutes, seconds)
                 }
 
                 override fun onFinish() {
-                    println("Finished")
+                    // Set progress to zero and allow chance to edit, if not item is auto-removed
                     countDownButton.setBackgroundResource(R.drawable.play_icon)
-                    progressBar.progress = 0  // Completed progress bar value
-
-                    // Set textView to zero and allow chance to edit, if not item is auto-removed
+                    progressBar.progress = finishedProgressNumber
                     item.studyTimerTime = timeLabel.text.toString()
                     itemActionListener?.onItemRemoved(holder.adapterPosition)
                     notifyDataSetChanged()
-                    Toast.makeText(c, "You finished, well done!", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        itemAdapterContext,
+                        R.string.finished_timer,
+                        Toast.LENGTH_LONG
+                    ).show()
                     isCountingDown = false
                     Log.i("ItemAdapter", "CountDown Stopped")
                 }
@@ -282,98 +289,102 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
     }
 
     inner class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        var titleLabel: TextView
-        val timeLabel: TextView
-        var erMenu: TextView
+        var titleLabel: TextView = itemView.findViewById(R.id.item_title)
+        val timeLabel: TextView = itemView.findViewById(R.id.time_count)
         val playButton: Button = itemView.findViewById(R.id.play_button)
         val inputHours: EditText? = itemView.findViewById(R.id.input_hour)
         val inputMinutes: EditText? = itemView.findViewById(R.id.input_minute)
         val quickAddButton: Button = itemView.findViewById(R.id.quick_add_button)
 
-
         init {
-            titleLabel = itemView.findViewById(R.id.item_title)
-            timeLabel = itemView.findViewById(R.id.time_count)
-            erMenu = itemView.findViewById(R.id.edit_or_remove_menu)
-            erMenu.setOnClickListener { popupMenus(itemView) }
+            val editRecyclerItemMenu: TextView = itemView.findViewById(R.id.edit_or_remove_menu)
+            editRecyclerItemMenu.setOnClickListener { popupMenus(itemView) }
         }
 
         /** Create popup menu for edit and remove interactions */
-        private fun popupMenus(v: View) {
+        private fun popupMenus(viewForPopup: View) {
+
+            // Get menu, text and views to be able to remove/edit recycler item
             val position = dataset[adapterPosition]
-            val popupMenus = PopupMenu(c, v)
+            val popupMenus = PopupMenu(itemAdapterContext, viewForPopup)
             popupMenus.inflate(R.menu.edit_menu)
             popupMenus.setOnMenuItemClickListener {
                 when (it.itemId) {
+                    // On edit selection
                     R.id.edit_text -> {
-                        val v = LayoutInflater.from(c).inflate(R.layout.add_item, null)
-                        val titleEditText = v.findViewById<EditText>(R.id.new_title)
-                        val timeEditText = v.findViewById<EditText>(R.id.new_time)
+                        val layoutInflaterView =
+                            LayoutInflater.from(itemAdapterContext).inflate(R.layout.add_item, null)
+                        val titleEditText =
+                            layoutInflaterView.findViewById<EditText>(R.id.new_title)
+                        val timeEditText = layoutInflaterView.findViewById<EditText>(R.id.new_time)
                         titleEditText.setText(position.studyTimeTitle)
                         timeEditText.setText(position.studyTimerTime)
 
-                        AlertDialog.Builder(c).setView(v).setPositiveButton("Save") { dialog, _ ->
-                            var newTitle = titleEditText.text.toString()
-                            var newTime = timeEditText.text.toString()
+                        // Create alert dialog box for editing
+                        AlertDialog.Builder(itemAdapterContext).setView(layoutInflaterView)
+                            .setPositiveButton(R.string.save) { dialog, _ ->
+                                var newTitle = titleEditText.text.toString()
+                                var newTime = timeEditText.text.toString()
 
-                            // Use defaults if values are removed through edit
-                            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(c)
-                            if (newTitle == "") {
-                                newTitle =
-                                    sharedPreferences.getString("default_title_key", "").toString()
-                            }
-                            if (newTime == "") {
-                                newTime =
-                                    sharedPreferences.getString("default_time_key", "").toString()
-                            }
+                                // Use defaults if values are removed through edit
+                                sharedPreferences =
+                                    PreferenceManager.getDefaultSharedPreferences(itemAdapterContext)
+                                if (newTitle == "") {
+                                    newTitle =
+                                        sharedPreferences.getString("default_title_key", "")
+                                            .toString()
+                                }
+                                if (newTime == "") {
+                                    newTime =
+                                        sharedPreferences.getString("default_time_key", "")
+                                            .toString()
+                                }
 
-                            position.studyTimeTitle = newTitle
-                            position.studyTimerTime = newTime
-                            titleLabel.text = newTitle
-                            timeLabel.text = newTime
-                            Log.i("ItemAdapter", "Title: ${position.studyTimeTitle}")
-                            Log.i("ItemAdapter", "Edited: $position")
-                            itemActionListener?.onItemUpdated(position, adapterPosition)
-                            notifyDataSetChanged()
-                            Toast.makeText(c, "Successfully Updated", Toast.LENGTH_LONG).show()
-                            dialog.dismiss()
-                        }
-                            .setNegativeButton("Cancel") { dialog, _ ->
-                                dialog.dismiss()
-                            }
-                            .create()
-                            .show()
-                        Toast.makeText(c, "Edit clicked", Toast.LENGTH_LONG).show()
-                        true
-
-                    }
-                    R.id.delete -> {
-                        AlertDialog.Builder(c)
-                            .setTitle("Delete")
-                            .setIcon(R.drawable.warning_icon)
-                            .setMessage("Are you sure you want to delete?")
-
-                            .setPositiveButton("Confirm") { dialog, _ ->
-                                dataset.removeAt(adapterPosition)
-                                itemActionListener?.onItemRemoved(adapterPosition)
+                                // Update text and recycler view, then close dialog
+                                position.studyTimeTitle = newTitle
+                                position.studyTimerTime = newTime
+                                titleLabel.text = newTitle
+                                timeLabel.text = newTime
+                                itemActionListener?.onItemUpdated(position, adapterPosition)
                                 notifyDataSetChanged()
-                                Toast.makeText(c, "Successfully Deleted", Toast.LENGTH_LONG).show()
                                 dialog.dismiss()
                             }
-                            .setNegativeButton("Cancel") { dialog, _ ->
+                            .setNegativeButton(R.string.cancel) { dialog, _ ->
                                 dialog.dismiss()
-
                             }
                             .create()
                             .show()
-
-                        Toast.makeText(c, "Delete clicked", Toast.LENGTH_LONG).show()
+                        true
+                    }
+                    // On delete selection
+                    R.id.delete -> {
+                        AlertDialog.Builder(itemAdapterContext)
+                            .setTitle(R.string.delete)
+                            .setIcon(R.drawable.warning_icon)
+                            .setMessage(R.string.confirm_delete_message)
+                            .setPositiveButton(R.string.confirm) { dialog, _ ->
+                                dataset.removeAt(adapterPosition)  // Remove item from data
+                                itemActionListener?.onItemRemoved(adapterPosition)  // Remove item from recycler view
+                                notifyDataSetChanged()
+                                Toast.makeText(
+                                    itemAdapterContext,
+                                    R.string.success_delete_message,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                dialog.dismiss()
+                            }
+                            .setNegativeButton(R.string.cancel) { dialog, _ ->
+                                dialog.dismiss()
+                            }
+                            .create()
+                            .show()
                         true
                     }
                     else -> true
                 }
             }
             popupMenus.show()
+            // Known warning: Reflective access to mPopup, which is not part of public SDK
             val popup = PopupMenu::class.java.getDeclaredField("mPopup")
             popup.isAccessible = true
             val menu = popup.get(popupMenus)
