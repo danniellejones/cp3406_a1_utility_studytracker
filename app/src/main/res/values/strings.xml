@@ -24,4 +24,14 @@
     <string name="start_time">00:00:00:00</string>
     <string name="item_title">My Study Timer</string>
 
+    <!-- Text required in code files -->
+    <string name="confirm_delete_message">Are you sure you want to delete?</string>
+    <string name="success_delete_message">Successfully deleted!</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="finished_timer">You finished, well done!</string>
+    <string name="invalid_time_entered_title">Invalid time format entered</string>
+    <string name="invalid_time_entered_message">Time has been set to a real time, please edit time to correct format.</string>
+
 </resources>
