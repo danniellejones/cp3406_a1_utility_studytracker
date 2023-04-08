@@ -118,11 +118,12 @@
             android:orientation="horizontal">
 
             <EditText
-                android:id="@+id/input_minute"
+                android:id="@+id/input_hour"
                 android:layout_width="100dp"
                 android:layout_height="wrap_content"
                 android:layout_margin="2dp"
                 android:layout_weight="1"
+                android:maxLength="2"
                 android:background="@color/grey_light"
                 android:hint="@string/hours"
                 android:importantForAutofill="noExcludeDescendants"
@@ -131,11 +132,12 @@
                 android:textAlignment="center" />
 
             <EditText
-                android:id="@+id/input_hour"
+                android:id="@+id/input_minute"
                 android:layout_width="100dp"
                 android:layout_height="wrap_content"
                 android:layout_margin="2dp"
                 android:layout_weight="1"
+                android:maxLength="2"
                 android:background="@color/grey_light"
                 android:hint="@string/minutes"
                 android:importantForAutofill="noExcludeDescendants"
@@ -144,6 +146,7 @@
                 android:textAlignment="center" />
 
             <Button
+                android:id="@+id/quick_add_button"
                 android:layout_width="100dp"
                 android:layout_height="match_parent"
                 android:layout_margin="2dp"

@@ -57,6 +57,26 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
         holder.titleLabel.text = item.studyTimeTitle
         holder.timeLabel.text = item.studyTimerTime
         val progressBar = holder.itemView.findViewById<ProgressBar>(R.id.progress_bar)
+        holder.quickAddButton.setOnClickListener {
+            val hoursStrFromQuickAdd = holder.inputHours?.text?.toString()?.takeIf(String::isNotBlank) ?: "0"
+            val minutesStrFromQuickAdd = holder.inputMinutes?.text?.toString()?.takeIf(String::isNotBlank) ?: "0"
+            val hoursFromQuickAdd = hoursStrFromQuickAdd.toInt()
+            val minutesFromQuickAdd = minutesStrFromQuickAdd.toInt()
+            var timeStr = holder.timeLabel.text?.toString()
+            timeStr = formatTimeString(timeStr as String)
+            Log.d("ItemAdapter", "Str Quick Orig: $timeStr")
+
+            val timeStrToAdd =
+                String.format("00:%02d:%02d:00", hoursFromQuickAdd, minutesFromQuickAdd)
+            Log.d("ItemAdapter", "Str Quick Add: $timeStrToAdd")
+            val totalSeconds = calculateNewTime(timeStr, timeStrToAdd)
+            val newTimeString = convertTimeInSecondsToString(totalSeconds)
+            item.studyTimerTime = newTimeString
+            holder.inputHours?.text?.clear()
+            holder.inputMinutes?.text?.clear()
+            itemActionListener?.onItemUpdated(item, holder.adapterPosition)
+            notifyDataSetChanged()
+        }
         holder.playButton.setOnClickListener {
             Log.i("ItemAdapter", "Initialised isCountingDown = $isCountingDown")
             toggleCountDownPlay(holder.playButton, holder.timeLabel, item, holder, progressBar)
@@ -65,7 +85,70 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
 
     }
 
-    private fun toggleCountDownPlay(countDownButton: Button, timeLabel: TextView, item: StudyTimer, holder: ItemViewHolder, progressBar: ProgressBar) {
+
+    private fun calculateNewTime(timeStr: String, timeStrToAdd: String): Int {
+        val oldTimeInSeconds: Int = calculateSeconds(timeStr)
+        val timeToAddInSeconds: Int = calculateSeconds(timeStrToAdd)
+        val newTimeInSeconds = if (timeToAddInSeconds > oldTimeInSeconds) { 0
+        } else {
+            oldTimeInSeconds - timeToAddInSeconds
+        }
+
+        return newTimeInSeconds
+    }
+
+    private fun convertTimeInSecondsToString(totalSeconds: Int): String {
+        val days = totalSeconds / (24 * 3600)
+        val hours = (totalSeconds % (24 * 3600)) / 3600
+        val minutes = (totalSeconds % 3600) / 60
+        val seconds = totalSeconds % 60
+
+        return String.format("%02d:%02d:%02d:%02d", days, hours, minutes, seconds)
+    }
+
+    private fun calculateSeconds(timeString: String): Int {
+        var totalSeconds = 0
+        val timeParts = timeString.split(":")
+        val multipliers = listOf(86400, 3600, 60, 1)
+        for ((index, part) in timeParts.withIndex()) {
+            val value = part.toInt()
+            if (value != 0) {
+                val seconds = value * multipliers[index]
+                totalSeconds += seconds
+            }
+        }
+        return totalSeconds
+    }
+
+//    private fun calculateSeconds(timeString: String): Int {
+//        var daysInSeconds = 0
+//        var hoursInSeconds = 0
+//        var minutesInSeconds = 0
+//        var seconds = 0
+//        val timeParts = timeString.split(":")
+//        if (timeParts[0].toInt() != 0) {
+//            daysInSeconds = timeParts[0].toInt() * 86400
+//        }
+//        else if (timeParts[1].toInt() != 0) {
+//            hoursInSeconds = timeParts[1].toInt() * 3600
+//        }
+//        else if (timeParts[2].toInt() != 0) {
+//            minutesInSeconds = timeParts[2].toInt() * 60
+//        }
+//        else {
+//            seconds = timeParts[3].toInt()
+//        }
+//        return daysInSeconds + hoursInSeconds + minutesInSeconds + seconds
+//    }
+
+
+    private fun toggleCountDownPlay(
+        countDownButton: Button,
+        timeLabel: TextView,
+        item: StudyTimer,
+        holder: ItemViewHolder,
+        progressBar: ProgressBar
+    ) {
         // Change from play to stop icon
         isCountingDown = !isCountingDown
         countDownButton.setBackgroundResource(if (isCountingDown) R.drawable.stop_icon else R.drawable.play_icon)
@@ -144,7 +227,8 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
                         ) - TimeUnit.HOURS.toSeconds(hours) - TimeUnit.DAYS.toSeconds(days)
 
                     // Update progress bar
-                    val updatedProgress = (((millisUntilFinished.toFloat() / countDownTime) * 100)).toInt()
+                    val updatedProgress =
+                        (((millisUntilFinished.toFloat() / countDownTime) * 100)).toInt()
                     progressBar.progress = updatedProgress
                     Log.i("ItemAdapter", "Progress: $updatedProgress")
 //                    holder.progressBar.setProgress((int) (millisUntilFinished / 1000));
@@ -154,6 +238,7 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
                     timeLabel.text =
                         String.format("%02d:%02d:%02d:%02d", days, hours, minutes, seconds)
                 }
+
                 override fun onFinish() {
                     println("Finished")
                     countDownButton.setBackgroundResource(R.drawable.play_icon)
@@ -198,6 +283,9 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
         val timeLabel: TextView
         var erMenu: TextView
         val playButton: Button = itemView.findViewById(R.id.play_button)
+        val inputHours: EditText? = itemView.findViewById(R.id.input_hour)
+        val inputMinutes: EditText? = itemView.findViewById(R.id.input_minute)
+        val quickAddButton: Button = itemView.findViewById(R.id.quick_add_button)
 
 
         init {
@@ -227,10 +315,12 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
                             // Use defaults if values are removed through edit
                             sharedPreferences = PreferenceManager.getDefaultSharedPreferences(c)
                             if (newTitle == "") {
-                                newTitle = sharedPreferences.getString("default_title_key", "").toString()
+                                newTitle =
+                                    sharedPreferences.getString("default_title_key", "").toString()
                             }
                             if (newTime == "") {
-                                newTime = sharedPreferences.getString("default_time_key", "").toString()
+                                newTime =
+                                    sharedPreferences.getString("default_time_key", "").toString()
                             }
 
                             position.studyTimeTitle = newTitle
