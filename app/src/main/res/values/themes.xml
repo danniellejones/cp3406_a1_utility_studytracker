@@ -5,9 +5,10 @@
         <item name="colorPrimary">@color/purple_medium</item>
         <item name="colorPrimaryVariant">@color/purple_dark</item>
         <item name="colorOnPrimary">@color/white</item>
+
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/orange_light</item>
-        <item name="colorSecondaryVariant">@color/orange_medium</item>
+        <item name="colorSecondary">@color/purple_bright</item>
+        <item name="colorSecondaryVariant">@color/purple_light</item>
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>

@@ -102,7 +102,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/orange_light"
+            android:background="?attr/colorSecondaryVariant"
             android:orientation="horizontal"
             android:paddingTop="2dp"
             android:paddingBottom="2dp">
