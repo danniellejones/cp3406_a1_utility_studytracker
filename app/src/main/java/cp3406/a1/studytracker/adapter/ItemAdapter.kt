@@ -9,12 +9,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
 import cp3406.a1.studytracker.R
 import cp3406.a1.studytracker.model.StudyTimer
 import java.util.concurrent.TimeUnit
+
 
 class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) :
     RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
@@ -27,7 +27,6 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
     private var countDownTimer: CountDownTimer? = null
     private var countDownTime: Long = 0
     private var countDownTimeLeft: Long = 0
-
 
     fun setOnItemActionListener(listener: OnItemActionListener) {
         itemActionListener = listener
@@ -57,14 +56,16 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
         val item = dataset[position]
         holder.titleLabel.text = item.studyTimeTitle
         holder.timeLabel.text = item.studyTimerTime
+        val progressBar = holder.itemView.findViewById<ProgressBar>(R.id.progress_bar)
         holder.playButton.setOnClickListener {
             Log.i("ItemAdapter", "Initialised isCountingDown = $isCountingDown")
-            toggleCountDownPlay(holder.playButton, holder.timeLabel, item, holder)
+            toggleCountDownPlay(holder.playButton, holder.timeLabel, item, holder, progressBar)
             onCountDownStateChangedListener?.onCountDownStateChanged(isCountingDown)
         }
+
     }
 
-    private fun toggleCountDownPlay(countDownButton: Button, timeLabel: TextView, item: StudyTimer, holder: ItemViewHolder) {
+    private fun toggleCountDownPlay(countDownButton: Button, timeLabel: TextView, item: StudyTimer, holder: ItemViewHolder, progressBar: ProgressBar) {
         // Change from play to stop icon
         isCountingDown = !isCountingDown
         countDownButton.setBackgroundResource(if (isCountingDown) R.drawable.stop_icon else R.drawable.play_icon)
@@ -142,12 +143,21 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
                             minutes
                         ) - TimeUnit.HOURS.toSeconds(hours) - TimeUnit.DAYS.toSeconds(days)
 
+                    // Update progress bar
+                    val updatedProgress = (((millisUntilFinished.toFloat() / countDownTime) * 100)).toInt()
+                    progressBar.progress = updatedProgress
+                    Log.i("ItemAdapter", "Progress: $updatedProgress")
+//                    holder.progressBar.setProgress((int) (millisUntilFinished / 1000));
+//                    val progress = (millisUntilFinished / 1000).toInt()
+//                    updateProgressBar(holder.adapterPosition, progress)
+
                     timeLabel.text =
                         String.format("%02d:%02d:%02d:%02d", days, hours, minutes, seconds)
                 }
                 override fun onFinish() {
                     println("Finished")
                     countDownButton.setBackgroundResource(R.drawable.play_icon)
+                    progressBar.progress = 0  // Completed progress bar value
 
                     // Set textView to zero and allow chance to edit, if not item is auto-removed
                     item.studyTimerTime = timeLabel.text.toString()
