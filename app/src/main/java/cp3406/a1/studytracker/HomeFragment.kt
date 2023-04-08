@@ -22,7 +22,6 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import cp3406.a1.studytracker.adapter.ItemAdapter
 import cp3406.a1.studytracker.model.StudyTimer
-import android.os.CountDownTimer
 
 /**
  * Home Fragment for the main interaction screen.
@@ -33,16 +32,10 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
     private lateinit var recyclerView: RecyclerView
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var floatingAddButton: FloatingActionButton
-//    private lateinit var countDownButton: Button
-
-//    private var isCountingDown: Boolean = false
     private var studyTimeList: ArrayList<StudyTimer> = ArrayList()
-
-    //    private lateinit var defaultTimeView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        isCountingDown = false  // Set again here, in case previous run left as true
         Log.i("HomeFragment", "onCreate called")
     }
 
@@ -62,7 +55,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
-        inflater.inflate((R.menu.options_menu), menu)
+        inflater.inflate((R.menu.settings_menu), menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -96,8 +89,6 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         floatingAddButton =
             view.findViewById(R.id.floating_add_button)
         floatingAddButton.setOnClickListener { addNewTimer() }
-//        countDownButton = view.findViewById(R.id.play_button)
-//        countDownButton.setOnClickListener { toggleCountDownPlay() }
 
         Log.i("HomeFragment", "onViewCreated after add: $studyTimeList")
         Log.i("HomeFragment", "onViewCreated called")
@@ -125,7 +116,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
             }
 
             studyTimeList.add(StudyTimer(title, timer))
-            var newItemTest = studyTimeList[studyTimeList.size - 1]
+            val newItemTest = studyTimeList[studyTimeList.size - 1]
             recyclerView.getLayoutManager()?.scrollToPosition(studyTimeList.size -1)
             Log.i("HomeFragment", "Add called: $newItemTest")
             itemAdapter.notifyItemInserted(studyTimeList.size - 1)
@@ -170,14 +161,11 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         Log.d("HomeFragment", "dataLoaded: $studyTimeList")
     }
 
-
     override fun onResume() {
         super.onResume()
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
-//        updateDefaultTime()
         updateRecyclerView()
         Log.i("HomeFragment", "onResume called: $studyTimeList")
-
     }
 
     override fun onPause() {
@@ -185,7 +173,6 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         Log.i("HomeFragment", "onPause called")
         saveList()
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
-
     }
 
     override fun onStop() {
@@ -211,8 +198,6 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
 
     private fun updateDefaultTime() {
         val defaultTime = sharedPreferences.getString("default_time_key", "")
-//        val defaultTimeString = getString(R.string.default_time_with_value, defaultTime ?: "N/A")
-//        defaultTimeView.text = defaultTimeString
         Log.d("HomeFragment", "Default time: $defaultTime")
     }
 

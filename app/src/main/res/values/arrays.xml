@@ -1,14 +1,22 @@
 <resources>
+
     <!-- Time Default Preference -->
     <string-array name="default_time_entries">
+        <item>10 minutes</item>
         <item>30 minutes</item>
         <item>1 hour</item>
+        <item>2 hour</item>
+        <item>3 hour</item>
         <item>10 hours</item>
     </string-array>
 
     <string-array name="default_time_values">
+        <item>00:00:10:00</item>
         <item>00:00:30:00</item>
         <item>00:01:00:00</item>
+        <item>00:02:00:00</item>
+        <item>00:03:00:00</item>
         <item>00:10:00:00</item>
     </string-array>
+
 </resources>

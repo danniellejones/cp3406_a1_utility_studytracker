@@ -298,7 +298,7 @@ class ItemAdapter(val c: Context, private val dataset: MutableList<StudyTimer>) 
         private fun popupMenus(v: View) {
             val position = dataset[adapterPosition]
             val popupMenus = PopupMenu(c, v)
-            popupMenus.inflate(R.menu.show_menu)
+            popupMenus.inflate(R.menu.edit_menu)
             popupMenus.setOnMenuItemClickListener {
                 when (it.itemId) {
                     R.id.edit_text -> {
