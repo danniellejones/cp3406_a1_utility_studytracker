@@ -18,7 +18,8 @@ import java.util.concurrent.TimeUnit
 private const val finishedProgressNumber = 0
 
 class TimerAdapter(
-    private val timerItems: ArrayList<TimerItem>
+    private val timerItems: ArrayList<TimerItem>,
+    private val itemAdapter: ItemAdapter
 ) : RecyclerView.Adapter<TimerAdapter.TimerViewHolder>() {
 
     // Count down timer
@@ -153,8 +154,8 @@ class TimerAdapter(
         // Hold the timer item associated with this view holder
         private lateinit var timerItem: TimerItem
 
-        val timerLabel: TextView = itemView.findViewById(R.id.time_count)
-        val progressBar: ProgressBar = itemView.findViewById(R.id.progress_bar)
+        private val timerLabel: TextView = itemView.findViewById(R.id.time_count)
+        private val progressBar: ProgressBar = itemView.findViewById(R.id.progress_bar)
         val toggleTimerButton: Button = itemView.findViewById(R.id.play_button)
 
         init {
@@ -175,6 +176,7 @@ class TimerAdapter(
             toggleTimerButton.setBackgroundResource(
                 (if (timerItem.isRunning) R.drawable.stop_icon else R.drawable.play_icon)
             )
+
             Log.i("TimerViewHolder", "bind called for timerItem: $timerItem")
         }
 
