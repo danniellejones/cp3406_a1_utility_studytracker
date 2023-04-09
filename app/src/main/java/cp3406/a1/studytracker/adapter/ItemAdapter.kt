@@ -9,7 +9,6 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.CountDownTimer
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -59,7 +58,7 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
         builder.setIcon(R.drawable.warning_icon)
         builder.setTitle(title)
         builder.setMessage(message)
-        builder.setPositiveButton("OK") { dialog, _ ->
+        builder.setPositiveButton(R.string.confirm) { dialog, _ ->
             dialog.dismiss()
         }
         builder.create()
@@ -103,7 +102,6 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
             timeStr = formatTimeString(timeStr as String)
             val timeStrToAdd =
                 String.format("00:%02d:%02d:00", hoursFromQuickAdd, minutesFromQuickAdd)
-            Log.d("ItemAdapter", "Str Quick Add: $timeStrToAdd")
             val totalSeconds = calculateTimeDifferenceInSeconds(timeStr, timeStrToAdd)
             val newTimeString = convertTimeInSecondsToString(totalSeconds)
 
@@ -173,12 +171,10 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
 
         // Retrieve the entered time and start/stop timer
         if (isCountingDown) {
-            Log.i("ItemAdapter", "CountDown Started")
 
             //Retrieve, validate text is in time format and format for use
             var timeStr = timeLabel.text.toString().trim()
             if (!isValidTime(timeStr)) {
-                Log.d("ItemAdapter", "Invalid time format: $timeStr")
                 displayWarningAlertDialog(
                     R.string.invalid_time_entered_title,
                     R.string.invalid_time_entered_message
@@ -187,8 +183,6 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
                 return
             }
             timeStr = formatTimeString(timeStr)
-
-            Log.i("ItemAdapter", "timeStr: $timeStr")
 
             // Split string from text view and assign to days, hours, minutes and seconds
             val timeUnits =
@@ -214,8 +208,6 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
 
             val timeMillis: Long = daysInMs + hoursInMs + minutesInMs + secondsInMs
             countDownTime = timeMillis
-            val test: Long = timeMillis
-            Log.i("ItemAdapter", "timeMillis: $test")
             countDownTimeLeft = countDownTime
 
             // Use count down timer and display on text view
@@ -258,7 +250,6 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
                         Toast.LENGTH_LONG
                     ).show()
                     isCountingDown = false
-                    Log.i("ItemAdapter", "CountDown Stopped")
                 }
             }.start()
         } else {
@@ -288,6 +279,7 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
         return formattedTimeStr
     }
 
+    /** ItemViewHolder class */
     inner class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         var titleLabel: TextView = itemView.findViewById(R.id.item_title)
         val timeLabel: TextView = itemView.findViewById(R.id.time_count)
