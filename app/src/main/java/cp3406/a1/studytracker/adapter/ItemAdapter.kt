@@ -18,18 +18,23 @@ import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
 import cp3406.a1.studytracker.R
 import cp3406.a1.studytracker.model.StudyTimer
+import cp3406.a1.studytracker.model.TimerItem
+import kotlinx.android.synthetic.main.list_item.view.*
 import java.util.concurrent.TimeUnit
 
 private const val finishedProgressNumber = 0
 
 /** Set up item adapter for recycle view */
-class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableList<StudyTimer>) :
+class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableList<StudyTimer>, private val recyclerView: RecyclerView) :
     RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
 
-    private var onCountDownStateChangedListener: OnCountDownStateChangedListener? = null
+    val timerItems = mutableListOf<TimerItem>()
+
+    //    private var onCountDownStateChangedListener: OnCountDownStateChangedListener? = null
     private var itemActionListener: OnItemActionListener? = null
     private var countDownTimer: CountDownTimer? = null
-    private var isCountingDown: Boolean = false
+
+    //    private var isCountingDown: Boolean = false
     private var countDownTime: Long = 0
     private var countDownTimeLeft: Long = 0
     private lateinit var sharedPreferences: SharedPreferences
@@ -40,30 +45,9 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
         fun onItemRemoved(position: Int)
     }
 
-    /** Share with home fragment state of count down play and stop */
-    interface OnCountDownStateChangedListener {
-        fun onCountDownStateChanged(isCountingDown: Boolean)
-    }
-
     /** Listen for updates to the itemAdapter */
     fun setOnItemActionListener(listener: OnItemActionListener) {
         itemActionListener = listener
-    }
-
-    /** Reusable Dialog Box for warning and error messages to user */
-    private fun displayWarningAlertDialog(titleResourceId: Int, messageResourceId: Int) {
-        val title = itemAdapterContext.getString(titleResourceId)
-        val message = itemAdapterContext.getString(messageResourceId)
-
-        val builder = AlertDialog.Builder(itemAdapterContext)
-        builder.setIcon(R.drawable.warning_icon)
-        builder.setTitle(title)
-        builder.setMessage(message)
-        builder.setPositiveButton("OK") { dialog, _ ->
-            dialog.dismiss()
-        }
-        builder.create()
-        builder.show()
     }
 
     /** Inflate and create new instance of ItemViewHolder class for each item in RecyclerView*/
@@ -71,6 +55,7 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
         val adapterView =
             LayoutInflater.from(parent.context).inflate(R.layout.list_item, parent, false)
 
+//        val studyTimerItemView = adapterView.findViewById<View>(R.id.item_section)
         return ItemViewHolder(adapterView)
     }
 
@@ -85,41 +70,63 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
         val item = dataset[position]
         holder.titleLabel.text = item.studyTimeTitle
         holder.timeLabel.text = item.studyTimerTime
-        val progressBar = holder.itemView.findViewById<ProgressBar>(R.id.progress_bar)
 
         // Quick add hours and minutes from edit text views by pressing button
         holder.quickAddButton.setOnClickListener {
-
-            // Get input from edit text views
-            val hoursStrFromQuickAdd =
-                holder.inputHours?.text?.toString()?.takeIf(String::isNotBlank) ?: "0"
-            val minutesStrFromQuickAdd =
-                holder.inputMinutes?.text?.toString()?.takeIf(String::isNotBlank) ?: "0"
-            val hoursFromQuickAdd = hoursStrFromQuickAdd.toInt()
-            val minutesFromQuickAdd = minutesStrFromQuickAdd.toInt()
-            var timeStr = holder.timeLabel.text?.toString()
-
-            // Format and calculate the time difference
-            timeStr = formatTimeString(timeStr as String)
-            val timeStrToAdd =
-                String.format("00:%02d:%02d:00", hoursFromQuickAdd, minutesFromQuickAdd)
-            Log.d("ItemAdapter", "Str Quick Add: $timeStrToAdd")
-            val totalSeconds = calculateTimeDifferenceInSeconds(timeStr, timeStrToAdd)
-            val newTimeString = convertTimeInSecondsToString(totalSeconds)
-
-            // Update item with new time, clear input fields and update recycler view
-            item.studyTimerTime = newTimeString
-            holder.inputHours?.text?.clear()
-            holder.inputMinutes?.text?.clear()
-            itemActionListener?.onItemUpdated(item, holder.adapterPosition)
-            notifyDataSetChanged()
+            addTimeFromQuickAdd(holder, item)
         }
+//        holder.togglePlayButton.setOnClickListener {
+//            val togglePlayButton = holder.itemView.findViewById<Button>(R.id.play_button)
+//            togglePlayButton.performClick()
+//            Log.d("ItemAdapter", "Button clicked")
+////            recyclerView.findViewHolderForAdapterPosition(position)?.let { viewHolder ->
+////                if (viewHolder is TimerViewHolder) {
+////                    viewHolder.itemView.play_button.performClick()
+////                }
+////            }
+//        }
+    }
 
-        // When play button is clicked start count down timer and update related views and data
-        holder.playButton.setOnClickListener {
-            toggleCountDownPlay(holder.playButton, holder.timeLabel, item, holder, progressBar)
-            onCountDownStateChangedListener?.onCountDownStateChanged(isCountingDown)
+    private fun addTimeFromQuickAdd(
+        holder: ItemViewHolder,
+        item: StudyTimer
+    ) {
+        // Get input from edit text views
+        val hoursStrFromQuickAdd =
+            holder.inputHours?.text?.toString()?.takeIf(String::isNotBlank) ?: "0"
+        val minutesStrFromQuickAdd =
+            holder.inputMinutes?.text?.toString()?.takeIf(String::isNotBlank) ?: "0"
+        val hoursFromQuickAdd = hoursStrFromQuickAdd.toInt()
+        val minutesFromQuickAdd = minutesStrFromQuickAdd.toInt()
+        var timeStr = holder.timeLabel.text?.toString()
+
+        // Format and calculate the time difference
+        timeStr = formatTimeString(timeStr as String)
+        val timeStrToAdd =
+            String.format("00:%02d:%02d:00", hoursFromQuickAdd, minutesFromQuickAdd)
+        Log.d("ItemAdapter", "Str Quick Add: $timeStrToAdd")
+        val totalSeconds = calculateTimeDifferenceInSeconds(timeStr, timeStrToAdd)
+        val newTimeString = convertTimeInSecondsToString(totalSeconds)
+
+        // Update item with new time, clear input fields and update recycler view
+        item.studyTimerTime = newTimeString
+        holder.inputHours?.text?.clear()
+        holder.inputMinutes?.text?.clear()
+        itemActionListener?.onItemUpdated(item, holder.adapterPosition)
+        notifyDataSetChanged()
+    }
+
+    /** Format time string */
+    private fun formatTimeString(timeStr: String): String {
+        val parts = timeStr.split(":")
+        val formattedTimeStr: String = when (parts.size) {
+            1 -> "0:0:0:$timeStr"
+            2 -> "0:0:${parts[0]}:${parts[1]}"
+            3 -> "0:${parts[0]}:${parts[1]}:${parts[2]}"
+            4 -> timeStr
+            else -> "0:0:0:0"
         }
+        return formattedTimeStr
     }
 
     /** Calculate difference in time between time strings */
@@ -160,62 +167,19 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
     }
 
     /** Handle the start and finish of the count down timer */
-    private fun toggleCountDownPlay(
-        countDownButton: Button,
-        timeLabel: TextView,
-        item: StudyTimer,
-        holder: ItemViewHolder,
-        progressBar: ProgressBar
+    fun toggleCountDownPlay(
+        item: TimerItem,
+        holder: TimerViewHolder
     ) {
-        // Change state and toggle to play or stop icon
-        isCountingDown = !isCountingDown
-        countDownButton.setBackgroundResource(if (isCountingDown) R.drawable.stop_icon else R.drawable.play_icon)
-
         // Retrieve the entered time and start/stop timer
-        if (isCountingDown) {
-            Log.i("ItemAdapter", "CountDown Started")
+        if (!item.isRunning) {
+            val timeStr = item.timerTime
+            val timeMillis: Long = calculateMillisecondsFromTimeString(timeStr)
 
-            //Retrieve, validate text is in time format and format for use
-            var timeStr = timeLabel.text.toString().trim()
-            if (!isValidTime(timeStr)) {
-                Log.d("ItemAdapter", "Invalid time format: $timeStr")
-                displayWarningAlertDialog(
-                    R.string.invalid_time_entered_title,
-                    R.string.invalid_time_entered_message
-                )
-                isCountingDown = false
-                return
-            }
-            timeStr = formatTimeString(timeStr)
+//             TODO: Remove test
+            Log.i("ItemAdapter", "timeMillis: $timeMillis")
 
-            Log.i("ItemAdapter", "timeStr: $timeStr")
-
-            // Split string from text view and assign to days, hours, minutes and seconds
-            val timeUnits =
-                mutableListOf("stringDays", "stringHours", "stringMinutes", "stringSeconds")
-            val timeValues = timeStr.split(":").toTypedArray()
-
-            for (i in timeUnits.indices) {
-                val unit = timeUnits[i]
-                val value = if (i < timeValues.size) timeValues[i] else "00"
-                println("$unit: $value")
-            }
-
-            val stringDays: String = timeValues[0]
-            val stringHours: String = timeValues[1]
-            val stringMinutes: String = timeValues[2]
-            val stringSeconds: String = timeValues[3]
-
-            // Convert and calculate milliseconds for count down timer
-            val daysInMs: Long = TimeUnit.DAYS.toMillis(stringDays.toLong())
-            val hoursInMs: Long = TimeUnit.HOURS.toMillis(stringHours.toLong())
-            val minutesInMs: Long = TimeUnit.MINUTES.toMillis(stringMinutes.toLong())
-            val secondsInMs: Long = TimeUnit.SECONDS.toMillis(stringSeconds.toLong())
-
-            val timeMillis: Long = daysInMs + hoursInMs + minutesInMs + secondsInMs
             countDownTime = timeMillis
-            val test: Long = timeMillis
-            Log.i("ItemAdapter", "timeMillis: $test")
             countDownTimeLeft = countDownTime
 
             // Use count down timer and display on text view
@@ -240,61 +204,67 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
                     // Update progress bar and time
                     val updatedProgress =
                         (((millisUntilFinished.toFloat() / countDownTime) * 100)).toInt()
-                    progressBar.progress = updatedProgress
-                    timeLabel.text =
+                    item.timeProgress = updatedProgress
+                    item.timerTime =
                         String.format("%02d:%02d:%02d:%02d", days, hours, minutes, seconds)
+                    Log.i("ItemAdapter", "$item.timeProgress $item.timerTime $item.isRunning")
+                    notifyDataSetChanged()
                 }
 
                 override fun onFinish() {
                     // Set progress to zero and allow chance to edit, if not item is auto-removed
-                    countDownButton.setBackgroundResource(R.drawable.play_icon)
-                    progressBar.progress = finishedProgressNumber
-                    item.studyTimerTime = timeLabel.text.toString()
-                    itemActionListener?.onItemRemoved(holder.adapterPosition)
+                    item.timeProgress = finishedProgressNumber
+//                    itemActionListener?.onItemRemoved(holder.adapterPosition)
                     notifyDataSetChanged()
-                    Toast.makeText(
-                        itemAdapterContext,
-                        R.string.finished_timer,
-                        Toast.LENGTH_LONG
-                    ).show()
-                    isCountingDown = false
-                    Log.i("ItemAdapter", "CountDown Stopped")
+
+                    // TODO : Remove test
+                    Log.i("ItemAdapter", "OnFinished Ended")
                 }
             }.start()
         } else {
-            countDownTimer?.cancel()
             // Update textView with new time
-            item.studyTimerTime = timeLabel.text.toString()
-            itemActionListener?.onItemUpdated(item, holder.adapterPosition)
+            countDownTimer?.cancel()
+            Log.d("ItemAdapter", "Time on cancel: count=$item.isRunning - ${item.timerTime}")
+//            itemActionListener?.onItemUpdated(item, holder.adapterPosition)
             notifyDataSetChanged()
         }
     }
 
-    /** Check for valid time string format */
-    private fun isValidTime(timeStr: String): Boolean {
-        return timeStr.matches("[\\d:]+".toRegex())
+
+    private fun calculateMillisecondsFromTimeString(timeStr: String): Long {
+        // Split string from text view and assign to days, hours, minutes and seconds
+        val timeUnits =
+            mutableListOf("stringDays", "stringHours", "stringMinutes", "stringSeconds")
+        val timeValues = timeStr.split(":").toTypedArray()
+
+        for (i in timeUnits.indices) {
+            val unit = timeUnits[i]
+            val value = if (i < timeValues.size) timeValues[i] else "00"
+            println("$unit: $value")
+        }
+
+        val stringDays: String = timeValues[0]
+        val stringHours: String = timeValues[1]
+        val stringMinutes: String = timeValues[2]
+        val stringSeconds: String = timeValues[3]
+
+        // Convert and calculate milliseconds for count down timer
+        val daysInMs: Long = TimeUnit.DAYS.toMillis(stringDays.toLong())
+        val hoursInMs: Long = TimeUnit.HOURS.toMillis(stringHours.toLong())
+        val minutesInMs: Long = TimeUnit.MINUTES.toMillis(stringMinutes.toLong())
+        val secondsInMs: Long = TimeUnit.SECONDS.toMillis(stringSeconds.toLong())
+
+        return daysInMs + hoursInMs + minutesInMs + secondsInMs
     }
 
-    /** Format time string */
-    private fun formatTimeString(timeStr: String): String {
-        val parts = timeStr.split(":")
-        val formattedTimeStr: String = when (parts.size) {
-            1 -> "0:0:0:$timeStr"
-            2 -> "0:0:${parts[0]}:${parts[1]}"
-            3 -> "0:${parts[0]}:${parts[1]}:${parts[2]}"
-            4 -> timeStr
-            else -> "0:0:0:0"
-        }
-        return formattedTimeStr
-    }
 
     inner class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         var titleLabel: TextView = itemView.findViewById(R.id.item_title)
         val timeLabel: TextView = itemView.findViewById(R.id.time_count)
-        val playButton: Button = itemView.findViewById(R.id.play_button)
         val inputHours: EditText? = itemView.findViewById(R.id.input_hour)
         val inputMinutes: EditText? = itemView.findViewById(R.id.input_minute)
         val quickAddButton: Button = itemView.findViewById(R.id.quick_add_button)
+        val togglePlayButton: Button = itemView.findViewById(R.id.play_button)
 
         init {
             val editRecyclerItemMenu: TextView = itemView.findViewById(R.id.edit_or_remove_menu)
@@ -313,10 +283,12 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
                     // On edit selection
                     R.id.edit_text -> {
                         val layoutInflaterView =
-                            LayoutInflater.from(itemAdapterContext).inflate(R.layout.add_item, null)
+                            LayoutInflater.from(itemAdapterContext)
+                                .inflate(R.layout.add_item, null)
                         val titleEditText =
                             layoutInflaterView.findViewById<EditText>(R.id.new_title)
-                        val timeEditText = layoutInflaterView.findViewById<EditText>(R.id.new_time)
+                        val timeEditText =
+                            layoutInflaterView.findViewById<EditText>(R.id.new_time)
                         titleEditText.setText(position.studyTimeTitle)
                         timeEditText.setText(position.studyTimerTime)
 
@@ -328,7 +300,9 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
 
                                 // Use defaults if values are removed through edit
                                 sharedPreferences =
-                                    PreferenceManager.getDefaultSharedPreferences(itemAdapterContext)
+                                    PreferenceManager.getDefaultSharedPreferences(
+                                        itemAdapterContext
+                                    )
                                 if (newTitle == "") {
                                     newTitle =
                                         sharedPreferences.getString("default_title_key", "")

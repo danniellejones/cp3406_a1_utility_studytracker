@@ -33,5 +33,7 @@
     <string name="finished_timer">You finished, well done!</string>
     <string name="invalid_time_entered_title">Invalid time format entered</string>
     <string name="invalid_time_entered_message">Time has been set to a real time, please edit time to correct format.</string>
+<!--    <string name="one_timer_only_title">You already have a timer playing</string>-->
+<!--    <string name="one_timer_only_message">You can only have one timer going at one time!</string>-->
 
 </resources>

@@ -4,8 +4,8 @@
 
 package cp3406.a1.studytracker
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
@@ -21,12 +21,16 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import cp3406.a1.studytracker.adapter.ItemAdapter
+import cp3406.a1.studytracker.adapter.TimerAdapter
+import cp3406.a1.studytracker.adapter.TimerViewHolder
 import cp3406.a1.studytracker.model.StudyTimer
+import cp3406.a1.studytracker.model.TimerItem
 
 /**
  * Home Fragment for the main interaction screen.
  */
-class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListener, ItemAdapter.OnItemActionListener, ItemAdapter.OnCountDownStateChangedListener {
+class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListener,
+    ItemAdapter.OnItemActionListener {
 
     private lateinit var itemAdapter: ItemAdapter
     private lateinit var recyclerView: RecyclerView
@@ -34,10 +38,14 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
     private lateinit var floatingAddButton: FloatingActionButton
     private var studyTimeList: ArrayList<StudyTimer> = ArrayList()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        Log.i("HomeFragment", "onCreate called")
-    }
+    // Set up timer items
+    private lateinit var timerAdapter: TimerAdapter
+    private val timerItems = mutableListOf<TimerItem>()
+
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//        Log.i("HomeFragment", "onCreate called")
+//    }
 
     /**
      * Inflates the fragment_home layout, adds list_item layout to view and sets default from settings
@@ -45,16 +53,62 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
-        super.onCreateView(inflater, container, savedInstanceState)
         setHasOptionsMenu(true)
-        val view = inflater.inflate(R.layout.fragment_home, container, false)
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
+//        super.onCreateView(inflater, container, savedInstanceState)
+//        val rootView = inflater.inflate(R.layout.fragment_home, container, false)
+//        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
         Log.i("HomeFragment", "OnCreateView called")
-        return view
+//        return rootView
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        loadList()
+        val rootView = inflater.inflate(R.layout.fragment_home, container, false)
+        recyclerView = rootView.findViewById(R.id.tracker_recycler_view) as RecyclerView
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        itemAdapter = ItemAdapter(requireContext(), studyTimeList, recyclerView)
+
+        // Initialize the timer adapter, and pass the item adapter instance
+        timerAdapter = TimerAdapter(itemAdapter.timerItems, recyclerView) { timerItem, holder ->
+            itemAdapter.toggleCountDownPlay(timerItem, holder)
+        }
+
+        itemAdapter.setOnItemActionListener(this)
+        // Set Recycler view Adapter
+        recyclerView.adapter = itemAdapter
+//        floatingAddButton =
+//            (rootView.findViewById(R.id.floating_add_button) ?: floatingAddButton.setOnClickListener { addNewTimer() }) as FloatingActionButton
+        floatingAddButton =
+            rootView.findViewById(R.id.floating_add_button)
+        floatingAddButton.setOnClickListener { addNewTimer() }
+
+        return rootView
+    }
+
+//    fun updateTimerValue(position: Int, timerValue: Long) {
+//        timerItems[position].timerTime = timerValue.toString()
+//        recyclerView.post {
+//            itemAdapter.notifyItemChanged(position)
+//        }
+//    }
+
+//    interface TimerViewHolderListener {
+//        fun onTogglePlayButtonClicked(position: Int)
+//    }
+
+    private fun onTogglePlay(position: Int, isRunning: Boolean) {
+        Log.i("HomeFragment", "onTogglePlay called: $position $isRunning")
+        val timerItem = timerItems[position]
+        timerItem.isRunning = isRunning
+        timerItems[position] = timerItem
+        timerAdapter.notifyItemChanged(position)
+
+        val holder = recyclerView.findViewHolderForAdapterPosition(position) as TimerViewHolder
+        itemAdapter.toggleCountDownPlay(timerItem, holder)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
+        // TODO: Extra brackets seemed to be required here?
         inflater.inflate((R.menu.settings_menu), menu)
     }
 
@@ -72,30 +126,31 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        Log.d("HomeFragment", "OnViewCreated: $studyTimeList")
 
         // Populate list with data from last session
-        loadList()
-        Log.d("HomeFragment", "OnViewCreated: $studyTimeList")
+//        loadList()
         // Set up recycler view
-        recyclerView = view.findViewById(R.id.tracker_recycler_view)
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+//        recyclerView = view.findViewById(R.id.tracker_recycler_view)
+//        recyclerView.layoutManager = LinearLayoutManager(requireContext())
         // Set Adapter
-        itemAdapter = ItemAdapter(requireContext(), studyTimeList)
-        itemAdapter.setOnItemActionListener(this)
+//        itemAdapter = ItemAdapter(requireContext(), studyTimeList)
+//        itemAdapter.setOnItemActionListener(this)
         // Set Recycler view Adapter
-        recyclerView.adapter = itemAdapter
+//        recyclerView.adapter = itemAdapter
 
         // Set up add button with dialog
-        floatingAddButton =
-            view.findViewById(R.id.floating_add_button)
-        floatingAddButton.setOnClickListener { addNewTimer() }
+//        floatingAddButton =
+//            view.findViewById(R.id.floating_add_button)
+//        floatingAddButton.setOnClickListener { addNewTimer() }
 
-        Log.i("HomeFragment", "onViewCreated after add: $studyTimeList")
-        Log.i("HomeFragment", "onViewCreated called")
+//        Log.i("HomeFragment", "onViewCreated after add: $studyTimeList")
+//        Log.i("HomeFragment", "onViewCreated called")
     }
 
 
     private fun addNewTimer() {
+        Log.i("HomeFragment", "addNewTimer called: $studyTimeList")
         val inflaterForAddItem = LayoutInflater.from(requireContext())
         val viewForAddItem = inflaterForAddItem.inflate(R.layout.add_item, null)
 
@@ -117,14 +172,14 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
 
             studyTimeList.add(StudyTimer(title, timer))
             val newItemTest = studyTimeList[studyTimeList.size - 1]
-            recyclerView.getLayoutManager()?.scrollToPosition(studyTimeList.size -1)
+            recyclerView.layoutManager?.scrollToPosition(studyTimeList.size - 1)
             Log.i("HomeFragment", "Add called: $newItemTest")
             itemAdapter.notifyItemInserted(studyTimeList.size - 1)
 
-            // TODO: Redundant code: required to force update of recycler view
+            // TODO: Repeated code: required to force update of recycler view
             //  - tried passing in as itemAdapter as parameter from onViewCreated
             //  - tried using recyclerView.adapter
-            itemAdapter = ItemAdapter(requireContext(), studyTimeList)
+            itemAdapter = ItemAdapter(requireContext(), studyTimeList, recyclerView)
             recyclerView.adapter = itemAdapter
 
             Toast.makeText(requireContext(), "Adding", Toast.LENGTH_LONG).show()
@@ -135,7 +190,6 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         }
         addDialog.create()
         addDialog.show()
-
     }
 
     /**
@@ -170,7 +224,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
 
     override fun onPause() {
         super.onPause()
-        Log.i("HomeFragment", "onPause called")
+        Log.i("HomeFragment", "onPause called: $studyTimeList")
         saveList()
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
     }
@@ -201,22 +255,20 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         Log.d("HomeFragment", "Default time: $defaultTime")
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun updateRecyclerView() {
         loadList()
         itemAdapter.notifyDataSetChanged()
-        Log.d("HomeFragment", "updateRV: $studyTimeList")
+        Log.d("HomeFragment", "update RecyclerView: $studyTimeList")
     }
 
     override fun onItemUpdated(item: StudyTimer, position: Int) {
         studyTimeList[position] = item
+        Log.d("HomeFragment", "Item Updated: $studyTimeList")
     }
 
     override fun onItemRemoved(position: Int) {
         studyTimeList.removeAt(position)
-    }
-
-    override fun onCountDownStateChanged(isCountingDown: Boolean) {
-        val sharedPreferences = requireActivity().getPreferences(Context.MODE_PRIVATE)
-        sharedPreferences.edit().putBoolean("IS_COUNTING_DOWN", isCountingDown).apply()
+        Log.d("HomeFragment", "Item Removed: $studyTimeList")
     }
 }
