@@ -22,93 +22,76 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import cp3406.a1.studytracker.adapter.ItemAdapter
 import cp3406.a1.studytracker.adapter.TimerAdapter
-import cp3406.a1.studytracker.adapter.TimerViewHolder
 import cp3406.a1.studytracker.model.StudyTimer
 import cp3406.a1.studytracker.model.TimerItem
 
-/**
- * Home Fragment for the main interaction screen.
- */
+//private const val finishedProgressNumber = 0
+
+private const val startProgressNumber = 100
+
+/** Home Fragment for the main interaction screen. */
 class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListener,
     ItemAdapter.OnItemActionListener {
 
+    // Display and Views
     private lateinit var itemAdapter: ItemAdapter
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var sharedPreferences: SharedPreferences
-    private lateinit var floatingAddButton: FloatingActionButton
-    private var studyTimeList: ArrayList<StudyTimer> = ArrayList()
-
-    // Set up timer items
     private lateinit var timerAdapter: TimerAdapter
-    private val timerItems = mutableListOf<TimerItem>()
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var floatingAddButton: FloatingActionButton
 
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        Log.i("HomeFragment", "onCreate called")
-//    }
+    // Data and Settings
+    private lateinit var sharedPreferences: SharedPreferences
+    private var studyTimeList: ArrayList<StudyTimer> = ArrayList()
+    private var itemTimers: ArrayList<TimerItem> = ArrayList()
 
-    /**
-     * Inflates the fragment_home layout, adds list_item layout to view and sets default from settings
-     */
+//    // Count down timer
+//    private var countDownTimer: CountDownTimer? = null
+//    private var countDownTime: Long = 0
+//    private var countDownTimeLeft: Long = 0
+
+    /** Inflates the fragment_home layout, adds list_item layout to view and sets default from settings */
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
-        setHasOptionsMenu(true)
-//        super.onCreateView(inflater, container, savedInstanceState)
-//        val rootView = inflater.inflate(R.layout.fragment_home, container, false)
-//        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
         Log.i("HomeFragment", "OnCreateView called")
-//        return rootView
+        setHasOptionsMenu(true)
 
+        // Inflate the layout containing the recycler view and set up shared preferences
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        loadList()
         val rootView = inflater.inflate(R.layout.fragment_home, container, false)
+        // Populate list with data from last session
+        loadList()
+        // Create a timer for each study timer item
+        for (studyTimer in studyTimeList) {
+            val timerItem = TimerItem(studyTimer.studyTimerTime, false, startProgressNumber)
+            itemTimers.add(timerItem)
+        }
+        // Initialize Adapter for Study Timer
+        itemAdapter = ItemAdapter(requireContext(), studyTimeList, itemTimers)
+        itemAdapter.setOnItemActionListener(this)
+        // Initialize Adapter for Timer
+        timerAdapter = TimerAdapter(itemTimers)
+        Log.d("HomeFragment", "timerAdapter: ${timerAdapter.itemCount}")
+        // Set up recycler view
         recyclerView = rootView.findViewById(R.id.tracker_recycler_view) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        itemAdapter = ItemAdapter(requireContext(), studyTimeList, recyclerView)
-
-        // Initialize the timer adapter, and pass the item adapter instance
-        timerAdapter = TimerAdapter(itemAdapter.timerItems, recyclerView) { timerItem, holder ->
-            itemAdapter.toggleCountDownPlay(timerItem, holder)
-        }
-
-        itemAdapter.setOnItemActionListener(this)
         // Set Recycler view Adapter
         recyclerView.adapter = itemAdapter
-//        floatingAddButton =
-//            (rootView.findViewById(R.id.floating_add_button) ?: floatingAddButton.setOnClickListener { addNewTimer() }) as FloatingActionButton
         floatingAddButton =
             rootView.findViewById(R.id.floating_add_button)
         floatingAddButton.setOnClickListener { addNewTimer() }
 
+
         return rootView
     }
 
-//    fun updateTimerValue(position: Int, timerValue: Long) {
-//        timerItems[position].timerTime = timerValue.toString()
-//        recyclerView.post {
-//            itemAdapter.notifyItemChanged(position)
-//        }
-//    }
-
-//    interface TimerViewHolderListener {
-//        fun onTogglePlayButtonClicked(position: Int)
-//    }
-
-    private fun onTogglePlay(position: Int, isRunning: Boolean) {
-        Log.i("HomeFragment", "onTogglePlay called: $position $isRunning")
-        val timerItem = timerItems[position]
-        timerItem.isRunning = isRunning
-        timerItems[position] = timerItem
-        timerAdapter.notifyItemChanged(position)
-
-        val holder = recyclerView.findViewHolderForAdapterPosition(position) as TimerViewHolder
-        itemAdapter.toggleCountDownPlay(timerItem, holder)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        Log.d("HomeFragment", "OnViewCreated: $studyTimeList")
+        super.onViewCreated(view, savedInstanceState)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
-        // TODO: Extra brackets seemed to be required here?
         inflater.inflate((R.menu.settings_menu), menu)
     }
 
@@ -124,33 +107,8 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         Log.i("HomeFragment", "onStart called")
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        Log.d("HomeFragment", "OnViewCreated: $studyTimeList")
-
-        // Populate list with data from last session
-//        loadList()
-        // Set up recycler view
-//        recyclerView = view.findViewById(R.id.tracker_recycler_view)
-//        recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        // Set Adapter
-//        itemAdapter = ItemAdapter(requireContext(), studyTimeList)
-//        itemAdapter.setOnItemActionListener(this)
-        // Set Recycler view Adapter
-//        recyclerView.adapter = itemAdapter
-
-        // Set up add button with dialog
-//        floatingAddButton =
-//            view.findViewById(R.id.floating_add_button)
-//        floatingAddButton.setOnClickListener { addNewTimer() }
-
-//        Log.i("HomeFragment", "onViewCreated after add: $studyTimeList")
-//        Log.i("HomeFragment", "onViewCreated called")
-    }
-
-
     private fun addNewTimer() {
-        Log.i("HomeFragment", "addNewTimer called: $studyTimeList")
+        Log.i("HomeFragment", "addNewTimer: $studyTimeList")
         val inflaterForAddItem = LayoutInflater.from(requireContext())
         val viewForAddItem = inflaterForAddItem.inflate(R.layout.add_item, null)
 
@@ -158,7 +116,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         val newStudyTimerTime = viewForAddItem.findViewById<EditText>(R.id.new_time)
         val addDialog = AlertDialog.Builder(requireContext())
         addDialog.setView(viewForAddItem)
-        addDialog.setPositiveButton("Save") { dialog, _ ->
+        addDialog.setPositiveButton(R.string.save) { dialog, _ ->
             var title = newStudyTimerTitle.text.toString()
             var timer = newStudyTimerTime.text.toString()
 
@@ -171,15 +129,13 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
             }
 
             studyTimeList.add(StudyTimer(title, timer))
-            val newItemTest = studyTimeList[studyTimeList.size - 1]
             recyclerView.layoutManager?.scrollToPosition(studyTimeList.size - 1)
-            Log.i("HomeFragment", "Add called: $newItemTest")
             itemAdapter.notifyItemInserted(studyTimeList.size - 1)
 
             // TODO: Repeated code: required to force update of recycler view
             //  - tried passing in as itemAdapter as parameter from onViewCreated
             //  - tried using recyclerView.adapter
-            itemAdapter = ItemAdapter(requireContext(), studyTimeList, recyclerView)
+            itemAdapter = ItemAdapter(requireContext(), studyTimeList, itemTimers)
             recyclerView.adapter = itemAdapter
 
             Toast.makeText(requireContext(), "Adding", Toast.LENGTH_LONG).show()
@@ -192,9 +148,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         addDialog.show()
     }
 
-    /**
-     * Save data to json file from data used in recycler view.
-     */
+    /** Save data to json file from data used in recycler view. */
     private fun saveList() {
         val editor = sharedPreferences.edit()
         val gson = Gson()
@@ -204,9 +158,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         Log.d("HomeFragment", "dataSaved: $studyTimeList")
     }
 
-    /**
-     * Load data from json file to populate recycler view.
-     */
+    /** Load data from json file to populate recycler view. */
     private fun loadList() {
         val gson = Gson()
         val json = sharedPreferences.getString("studyTimeList", null)
@@ -220,6 +172,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
         updateRecyclerView()
         Log.i("HomeFragment", "onResume called: $studyTimeList")
+        Log.d("HomeFragment", "timerAdapter in resume: ${timerAdapter.itemCount}")
     }
 
     override fun onPause() {
@@ -271,4 +224,96 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         studyTimeList.removeAt(position)
         Log.d("HomeFragment", "Item Removed: $studyTimeList")
     }
+
+    /** Handle the start and finish of the count down timer */
+//    fun toggleCountDownPlay(
+//        timerItem: TimerItem,
+//        timerTextView: TextView
+//    ) {
+//        // Get string from text view, calculate milliseconds and start the timer
+//        if (!timerItem.isRunning) {
+//            val timeStr = timerItem.timerTime
+//            val timeMillis: Long = convertMillisecondsToTimeString(timeStr)
+//
+////             TODO: Remove test
+//            Log.i("ItemAdapter", "timeMillis: $timeMillis")
+//
+//            countDownTime = timeMillis
+//            countDownTimeLeft = countDownTime
+//
+//            // Use count down timer and display on text view
+//            countDownTimer = object : CountDownTimer(countDownTimeLeft, 1000) {
+//
+//                override fun onTick(millisUntilFinished: Long) {
+//                    countDownTimeLeft = millisUntilFinished
+//                    val days = TimeUnit.MILLISECONDS.toDays(millisUntilFinished)
+//                    val hours =
+//                        TimeUnit.MILLISECONDS.toHours(millisUntilFinished) - TimeUnit.DAYS.toHours(
+//                            days
+//                        )
+//                    val minutes =
+//                        TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) - TimeUnit.HOURS.toMinutes(
+//                            hours
+//                        ) - TimeUnit.DAYS.toMinutes(days)
+//                    val seconds =
+//                        TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) - TimeUnit.MINUTES.toSeconds(
+//                            minutes
+//                        ) - TimeUnit.HOURS.toSeconds(hours) - TimeUnit.DAYS.toSeconds(days)
+//
+//                    // Update progress bar and time
+//                    val updatedProgress =
+//                        (((millisUntilFinished.toFloat() / countDownTime) * 100)).toInt()
+//                    timerItem.timeProgress = updatedProgress
+//                    timerItem.timerTime =
+//                        String.format("%02d:%02d:%02d:%02d", days, hours, minutes, seconds)
+//
+//                    Log.i("ItemAdapter", "$timerItem.timeProgress $timerItem.timerTime $timerItem.isRunning")
+////                    notifyDataSetChanged()
+//                }
+//
+//                override fun onFinish() {
+//                    // Set progress to zero and allow chance to edit, if not item is auto-removed
+//                    timerItem.timeProgress = finishedProgressNumber
+////                    itemActionListener?.onItemRemoved(holder.adapterPosition)
+////                    notifyDataSetChanged()
+//
+//                    // TODO : Remove test
+//                    Log.i("ItemAdapter", "OnFinished Ended")
+//                }
+//            }.start()
+//        } else {
+//            // Update textView with new time
+//            countDownTimer?.cancel()
+//            Log.d("ItemAdapter", "Time on cancel: count=$timerItem.isRunning - ${timerItem.timerTime}")
+////            itemActionListener?.onItemUpdated(item, holder.adapterPosition)
+////            notifyDataSetChanged()
+//        }
+//    }
+
+//    private fun convertMillisecondsToTimeString(timeStr: String): Long {
+//        // Split string from text view and assign to days, hours, minutes and seconds
+//        val timeUnits =
+//            mutableListOf("stringDays", "stringHours", "stringMinutes", "stringSeconds")
+//        val timeValues = timeStr.split(":").toTypedArray()
+//
+//        for (i in timeUnits.indices) {
+//            val unit = timeUnits[i]
+//            val value = if (i < timeValues.size) timeValues[i] else "00"
+//            println("$unit: $value")
+//        }
+//
+//        val stringDays: String = timeValues[0]
+//        val stringHours: String = timeValues[1]
+//        val stringMinutes: String = timeValues[2]
+//        val stringSeconds: String = timeValues[3]
+//
+//        // Convert and calculate milliseconds for count down timer
+//        val daysInMs: Long = TimeUnit.DAYS.toMillis(stringDays.toLong())
+//        val hoursInMs: Long = TimeUnit.HOURS.toMillis(stringHours.toLong())
+//        val minutesInMs: Long = TimeUnit.MINUTES.toMillis(stringMinutes.toLong())
+//        val secondsInMs: Long = TimeUnit.SECONDS.toMillis(stringSeconds.toLong())
+//
+//        return daysInMs + hoursInMs + minutesInMs + secondsInMs
+//    }
+
 }

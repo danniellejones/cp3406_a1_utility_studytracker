@@ -8,7 +8,6 @@ package cp3406.a1.studytracker.adapter
 import android.app.AlertDialog
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.CountDownTimer
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -19,25 +18,24 @@ import androidx.recyclerview.widget.RecyclerView
 import cp3406.a1.studytracker.R
 import cp3406.a1.studytracker.model.StudyTimer
 import cp3406.a1.studytracker.model.TimerItem
-import kotlinx.android.synthetic.main.list_item.view.*
-import java.util.concurrent.TimeUnit
 
-private const val finishedProgressNumber = 0
+//private const val finishedProgressNumber = 0
 
 /** Set up item adapter for recycle view */
-class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableList<StudyTimer>, private val recyclerView: RecyclerView) :
+class ItemAdapter(
+    val itemAdapterContext: Context,
+    private val dataset: MutableList<StudyTimer>,
+    private val timerItems: MutableList<TimerItem>
+) :
     RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
 
-    val timerItems = mutableListOf<TimerItem>()
-
-    //    private var onCountDownStateChangedListener: OnCountDownStateChangedListener? = null
     private var itemActionListener: OnItemActionListener? = null
-    private var countDownTimer: CountDownTimer? = null
-
-    //    private var isCountingDown: Boolean = false
-    private var countDownTime: Long = 0
-    private var countDownTimeLeft: Long = 0
     private lateinit var sharedPreferences: SharedPreferences
+
+    // Count down timer
+//    private var countDownTimer: CountDownTimer? = null
+//    private var countDownTime: Long = 0
+//    private var countDownTimeLeft: Long = 0
 
     /** Allow edit and remove of items from the recyclerview */
     interface OnItemActionListener {
@@ -55,7 +53,6 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
         val adapterView =
             LayoutInflater.from(parent.context).inflate(R.layout.list_item, parent, false)
 
-//        val studyTimerItemView = adapterView.findViewById<View>(R.id.item_section)
         return ItemViewHolder(adapterView)
     }
 
@@ -75,16 +72,9 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
         holder.quickAddButton.setOnClickListener {
             addTimeFromQuickAdd(holder, item)
         }
-//        holder.togglePlayButton.setOnClickListener {
-//            val togglePlayButton = holder.itemView.findViewById<Button>(R.id.play_button)
-//            togglePlayButton.performClick()
-//            Log.d("ItemAdapter", "Button clicked")
-////            recyclerView.findViewHolderForAdapterPosition(position)?.let { viewHolder ->
-////                if (viewHolder is TimerViewHolder) {
-////                    viewHolder.itemView.play_button.performClick()
-////                }
-////            }
-//        }
+//        holder.togglePlayButton.setOnClickListener( {
+//            toggleCountDownPlay( )
+//        })
     }
 
     private fun addTimeFromQuickAdd(
@@ -115,6 +105,79 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
         itemActionListener?.onItemUpdated(item, holder.adapterPosition)
         notifyDataSetChanged()
     }
+
+    fun updateTimerItem(studyTimer: StudyTimer) {
+        val index = dataset.indexOf(studyTimer)
+        val timerItem = timerItems[index]
+        timerItem.timerTime = studyTimer.studyTimerTime
+        // update any other TimerItem properties as needed
+        notifyItemChanged(index)
+    }
+
+
+//    fun toggleCountDownPlay(
+//        timerItem: TimerItem,
+//        timerTextView: TextView
+//    ) {
+//        // Get string from text view, calculate milliseconds and start the timer
+//        if (!timerItem.isRunning) {
+//            val timeStr = timerItem.timerTime
+//            val timeMillis: Long = convertMillisecondsToTimeString(timeStr)
+//
+////             TODO: Remove test
+//            Log.i("ItemAdapter", "timeMillis: $timeMillis")
+//
+//            countDownTime = timeMillis
+//            countDownTimeLeft = countDownTime
+//
+//            // Use count down timer and display on text view
+//            countDownTimer = object : CountDownTimer(countDownTimeLeft, 1000) {
+//
+//                override fun onTick(millisUntilFinished: Long) {
+//                    countDownTimeLeft = millisUntilFinished
+//                    val days = TimeUnit.MILLISECONDS.toDays(millisUntilFinished)
+//                    val hours =
+//                        TimeUnit.MILLISECONDS.toHours(millisUntilFinished) - TimeUnit.DAYS.toHours(
+//                            days
+//                        )
+//                    val minutes =
+//                        TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) - TimeUnit.HOURS.toMinutes(
+//                            hours
+//                        ) - TimeUnit.DAYS.toMinutes(days)
+//                    val seconds =
+//                        TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) - TimeUnit.MINUTES.toSeconds(
+//                            minutes
+//                        ) - TimeUnit.HOURS.toSeconds(hours) - TimeUnit.DAYS.toSeconds(days)
+//
+//                    // Update progress bar and time
+//                    val updatedProgress =
+//                        (((millisUntilFinished.toFloat() / countDownTime) * 100)).toInt()
+//                    timerItem.timeProgress = updatedProgress
+//                    timerItem.timerTime =
+//                        String.format("%02d:%02d:%02d:%02d", days, hours, minutes, seconds)
+//
+//                    Log.i("ItemAdapter", "$timerItem.timeProgress $timerItem.timerTime $timerItem.isRunning")
+////                    notifyDataSetChanged()
+//                }
+//
+//                override fun onFinish() {
+//                    // Set progress to zero and allow chance to edit, if not item is auto-removed
+//                    timerItem.timeProgress = finishedProgressNumber
+////                    itemActionListener?.onItemRemoved(holder.adapterPosition)
+////                    notifyDataSetChanged()
+//
+//                    // TODO : Remove test
+//                    Log.i("ItemAdapter", "OnFinished Ended")
+//                }
+//            }.start()
+//        } else {
+//            // Update textView with new time
+//            countDownTimer?.cancel()
+//            Log.d("ItemAdapter", "Time on cancel: count=$timerItem.isRunning - ${timerItem.timerTime}")
+////            itemActionListener?.onItemUpdated(item, holder.adapterPosition)
+////            notifyDataSetChanged()
+//        }
+//    }
 
     /** Format time string */
     private fun formatTimeString(timeStr: String): String {
@@ -166,106 +229,13 @@ class ItemAdapter(val itemAdapterContext: Context, private val dataset: MutableL
         return totalSeconds
     }
 
-    /** Handle the start and finish of the count down timer */
-    fun toggleCountDownPlay(
-        item: TimerItem,
-        holder: TimerViewHolder
-    ) {
-        // Retrieve the entered time and start/stop timer
-        if (!item.isRunning) {
-            val timeStr = item.timerTime
-            val timeMillis: Long = calculateMillisecondsFromTimeString(timeStr)
-
-//             TODO: Remove test
-            Log.i("ItemAdapter", "timeMillis: $timeMillis")
-
-            countDownTime = timeMillis
-            countDownTimeLeft = countDownTime
-
-            // Use count down timer and display on text view
-            countDownTimer = object : CountDownTimer(countDownTimeLeft, 1000) {
-
-                override fun onTick(millisUntilFinished: Long) {
-                    countDownTimeLeft = millisUntilFinished
-                    val days = TimeUnit.MILLISECONDS.toDays(millisUntilFinished)
-                    val hours =
-                        TimeUnit.MILLISECONDS.toHours(millisUntilFinished) - TimeUnit.DAYS.toHours(
-                            days
-                        )
-                    val minutes =
-                        TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) - TimeUnit.HOURS.toMinutes(
-                            hours
-                        ) - TimeUnit.DAYS.toMinutes(days)
-                    val seconds =
-                        TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) - TimeUnit.MINUTES.toSeconds(
-                            minutes
-                        ) - TimeUnit.HOURS.toSeconds(hours) - TimeUnit.DAYS.toSeconds(days)
-
-                    // Update progress bar and time
-                    val updatedProgress =
-                        (((millisUntilFinished.toFloat() / countDownTime) * 100)).toInt()
-                    item.timeProgress = updatedProgress
-                    item.timerTime =
-                        String.format("%02d:%02d:%02d:%02d", days, hours, minutes, seconds)
-                    Log.i("ItemAdapter", "$item.timeProgress $item.timerTime $item.isRunning")
-                    notifyDataSetChanged()
-                }
-
-                override fun onFinish() {
-                    // Set progress to zero and allow chance to edit, if not item is auto-removed
-                    item.timeProgress = finishedProgressNumber
-//                    itemActionListener?.onItemRemoved(holder.adapterPosition)
-                    notifyDataSetChanged()
-
-                    // TODO : Remove test
-                    Log.i("ItemAdapter", "OnFinished Ended")
-                }
-            }.start()
-        } else {
-            // Update textView with new time
-            countDownTimer?.cancel()
-            Log.d("ItemAdapter", "Time on cancel: count=$item.isRunning - ${item.timerTime}")
-//            itemActionListener?.onItemUpdated(item, holder.adapterPosition)
-            notifyDataSetChanged()
-        }
-    }
-
-
-    private fun calculateMillisecondsFromTimeString(timeStr: String): Long {
-        // Split string from text view and assign to days, hours, minutes and seconds
-        val timeUnits =
-            mutableListOf("stringDays", "stringHours", "stringMinutes", "stringSeconds")
-        val timeValues = timeStr.split(":").toTypedArray()
-
-        for (i in timeUnits.indices) {
-            val unit = timeUnits[i]
-            val value = if (i < timeValues.size) timeValues[i] else "00"
-            println("$unit: $value")
-        }
-
-        val stringDays: String = timeValues[0]
-        val stringHours: String = timeValues[1]
-        val stringMinutes: String = timeValues[2]
-        val stringSeconds: String = timeValues[3]
-
-        // Convert and calculate milliseconds for count down timer
-        val daysInMs: Long = TimeUnit.DAYS.toMillis(stringDays.toLong())
-        val hoursInMs: Long = TimeUnit.HOURS.toMillis(stringHours.toLong())
-        val minutesInMs: Long = TimeUnit.MINUTES.toMillis(stringMinutes.toLong())
-        val secondsInMs: Long = TimeUnit.SECONDS.toMillis(stringSeconds.toLong())
-
-        return daysInMs + hoursInMs + minutesInMs + secondsInMs
-    }
-
-
     inner class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         var titleLabel: TextView = itemView.findViewById(R.id.item_title)
         val timeLabel: TextView = itemView.findViewById(R.id.time_count)
         val inputHours: EditText? = itemView.findViewById(R.id.input_hour)
         val inputMinutes: EditText? = itemView.findViewById(R.id.input_minute)
         val quickAddButton: Button = itemView.findViewById(R.id.quick_add_button)
-        val togglePlayButton: Button = itemView.findViewById(R.id.play_button)
-
+//        val togglePlayButton: Button = itemView.findViewById(R.id.play_button)
         init {
             val editRecyclerItemMenu: TextView = itemView.findViewById(R.id.edit_or_remove_menu)
             editRecyclerItemMenu.setOnClickListener { popupMenus(itemView) }
