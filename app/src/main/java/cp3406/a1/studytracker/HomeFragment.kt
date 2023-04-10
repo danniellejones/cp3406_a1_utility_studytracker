@@ -63,7 +63,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         itemAdapter.setOnItemActionListener(this)
         itemAdapter.setOnItemClickListener(this)
         // Initialize Adapter for Timer
-        timerAdapter = TimerAdapter(timerItems, itemAdapter, studyTimerItems)
+        timerAdapter = TimerAdapter(timerItems)
         // Set up recycler view
         recyclerView = rootView.findViewById(R.id.tracker_recycler_view) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -73,14 +73,10 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
             rootView.findViewById(R.id.floating_add_button)
         floatingAddButton.setOnClickListener { addNewStudyTimer() }
 
-        Log.i(
-            "HomeFragment",
-            "OnCreateView: count=${timerAdapter.itemCount} timerItems=${timerItems}"
-        )
-
         return rootView
     }
 
+    /** Check size of study timer list and creates any missing timers */
     private fun createTimerInstances() {
         if (timerItems.size != studyTimerItems.size) {
             val difference = studyTimerItems.size - timerItems.size
@@ -97,19 +93,13 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        Log.i(
-            "HomeFragment",
-            "OnViewCreated: count=${itemAdapter.itemCount} studyTimers=$studyTimerItems"
-        )
-        super.onViewCreated(view, savedInstanceState)
-    }
-
+    /** Inflate options menu */
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate((R.menu.settings_menu), menu)
     }
 
+    /** Navigation set up */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return NavigationUI.onNavDestinationSelected(
             item,
@@ -117,8 +107,8 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         ) || super.onOptionsItemSelected(item)
     }
 
+    /** Add new study timer */
     private fun addNewStudyTimer() {
-        Log.i("HomeFragment", "addNewTimer: $studyTimerItems $timerItems")
         val inflaterForAddItem = LayoutInflater.from(requireContext())
         val viewForAddItem = inflaterForAddItem.inflate(R.layout.add_item, null)
 
@@ -141,11 +131,6 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
             studyTimerItems.add(StudyTimer(title, timer))
             recyclerView.layoutManager?.scrollToPosition(studyTimerItems.size - 1)
             itemAdapter.notifyItemInserted(studyTimerItems.size - 1)
-//            itemAdapter.updateTimerItemsToMatchStudyTimers()
-
-            // TODO: Repeated code: required to force update of recycler view
-            //  - tried passing in as itemAdapter as parameter from onViewCreated
-            //  - tried using recyclerView.adapter
             itemAdapter = ItemAdapter(requireContext(), studyTimerItems, timerItems)
             recyclerView.adapter = itemAdapter
 
@@ -165,7 +150,6 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         val json = gson.toJson(studyTimerItems)
         editor.putString("studyTimeList", json)
         editor.apply()
-        Log.i("HomeFragment", "Saved: $studyTimerItems")
     }
 
     /** Load data from json file to populate recycler view. */
@@ -174,60 +158,49 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         val json = sharedPreferences.getString("studyTimeList", null)
         val type = object : TypeToken<ArrayList<StudyTimer>>() {}.type
         studyTimerItems = gson.fromJson(json, type) ?: ArrayList()
-        Log.i("HomeFragment", "Loaded: $studyTimerItems")
     }
 
+    /** Listen for shared preference changes and update recycler view (save/refresh) */
     override fun onResume() {
         super.onResume()
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
         updateRecyclerView()
-        Log.i("HomeFragment", "onResume: studyTimers=$studyTimerItems timerItems=${timerItems}")
     }
 
+    /** Saves shared preferences to file */
     override fun onPause() {
         super.onPause()
-        Log.i("HomeFragment", "onPause called: $studyTimerItems")
         saveStudyTimersToFile()
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
     }
 
-    override fun onStop() {
-        super.onStop()
-        Log.i("HomeFragment", "onStop: studyTimers=$studyTimerItems timerItems=${timerItems}")
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        Log.i(
-            "HomeFragment",
-            "onDestroyView: studyTimers=$studyTimerItems timerItems=${timerItems}"
-        )
-    }
-
+    /** When default setting changed refresh view */
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         if (key == "default_time_key") {
             updateDefaultTime()
         }
     }
 
+    /** Get default time settings from shared preferences */
     private fun updateDefaultTime() {
         val defaultTime = sharedPreferences.getString("default_time_key", "")
         Log.d("HomeFragment", "Default time: $defaultTime")
     }
 
+    /** Re-load the study timer data and refresh recycler view */
     @SuppressLint("NotifyDataSetChanged")
     private fun updateRecyclerView() {
         loadStudyTimersFromFile()
         itemAdapter.notifyDataSetChanged()
-//        Log.i("HomeFragment", "updateRecyclerView: $studyTimeList")
     }
 
+    /** Refresh when item is changed */
     override fun onItemUpdated(item: StudyTimer, position: Int) {
         studyTimerItems[position] = item
         itemAdapter.updateTimerItemsToMatchStudyTimers()
-        Log.d("HomeFragment", "Item Updated: $studyTimerItems $timerItems")
     }
 
+    /** Handle remove item and refresh */
     override fun onItemRemoved(position: Int) {
 //        timerItems.removeAt(position)
         studyTimerItems.removeAt(position)
@@ -235,8 +208,8 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         Log.d("HomeFragment", "Item Removed: $studyTimerItems $timerItems")
     }
 
+    /** Tests for on item click */
     override fun onItemClick(position: Int) {
         Log.d("HomeFragment", "onItemClick")
-
     }
 }

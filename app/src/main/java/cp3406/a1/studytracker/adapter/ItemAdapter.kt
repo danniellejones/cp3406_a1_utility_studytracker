@@ -49,10 +49,12 @@ class ItemAdapter(
         fun onItemRemoved(position: Int)
     }
 
+    /** For on play button click */
     interface OnItemClickListener {
         fun onItemClick(position: Int)
     }
 
+    /** After changes update the timer item instances to reflect the study timers */
     fun updateTimerItemsToMatchStudyTimers() {
         timerItems.clear()
         for (studyTimerItem in studyTimerItems) {
@@ -62,34 +64,13 @@ class ItemAdapter(
         notifyDataSetChanged()
     }
 
-    fun updateStudyTimerTimeToTimerTime() {
-        for (studyTimerItem in studyTimerItems) {
-            for (timerItem in timerItems) {
-                val position = studyTimerItems.indexOf(studyTimerItem)
-                val selectedTimerItem = timerItems[position]
-                studyTimerItem.studyTimerTime = selectedTimerItem.timerTime
-            }
-            notifyDataSetChanged()
-        }
-    }
-
-
+    /** Listen for play button click */
     fun setOnItemClickListener(listener: OnItemClickListener) {
         itemClickListener = listener
     }
 
-//    fun updateTimerItems() {
-//        timerItems.clear()
-//        for (studyTimer in timerItems) {
-//            val timerItem = TimerItem(studyTimer.timerTime, false, startProgressNumber)
-//            timerItems.add(timerItem)
-//        }
-//        notifyDataSetChanged()
-//    }
-
-
     /** Listen for updates to the itemAdapter */
-    fun setOnItemActionListener(listener: ItemAdapter.OnItemActionListener) {
+    fun setOnItemActionListener(listener: OnItemActionListener) {
         itemActionListener = listener
     }
 
@@ -115,7 +96,6 @@ class ItemAdapter(
 
         // Quick add hours and minutes from edit text views by pressing button
         holder.quickAddButton.setOnClickListener {
-            // TODO: Add error checking for if count down is running - warning dialog?
             addTimeFromQuickAdd(holder, item)
         }
     }
@@ -199,6 +179,7 @@ class ItemAdapter(
         return totalSeconds
     }
 
+    /** Item View Holder */
     inner class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         var titleLabel: TextView = itemView.findViewById(R.id.item_title)
         val timerLabel: TextView = itemView.findViewById(R.id.time_count)
@@ -206,27 +187,18 @@ class ItemAdapter(
         val inputMinutes: EditText? = itemView.findViewById(R.id.input_minute)
         val quickAddButton: Button = itemView.findViewById(R.id.quick_add_button)
         var progressBar: ProgressBar = itemView.findViewById(R.id.progress_bar)
-        val togglePlayButton: Button = itemView.findViewById(R.id.play_button)
+        private val togglePlayButton: Button = itemView.findViewById(R.id.play_button)
 
         init {
             val editRecyclerItemMenu: TextView = itemView.findViewById(R.id.edit_or_remove_menu)
             editRecyclerItemMenu.setOnClickListener { popupMenus(itemView) }
 
-
             togglePlayButton.setOnClickListener {
                 val selectedStudyTimer = studyTimerItems[adapterPosition]
                 val position = studyTimerItems.indexOf(selectedStudyTimer)
-
                 toggleCountDown(timerItems[position])
             }
         }
-
-        private fun testFunction(any: Any) {
-            val position = studyTimerItems[adapterPosition]
-            itemActionListener?.onItemUpdated(position, adapterPosition)
-            Log.i("ItemAdapter", "Test Function $any")
-        }
-
 
         /** Create popup menu for edit and remove interactions */
         private fun popupMenus(viewForPopup: View) {
@@ -329,11 +301,10 @@ class ItemAdapter(
         ) {
             // Get string from text view, calculate milliseconds and start the timer
             if (!timerItem.isRunning) {
-                timerItem.isRunning = !timerItem.isRunning
+                timerItem.isRunning = true
 
                 var timeStr = timerLabel.text.toString().trim()
                 if (!isValidTime(timeStr)) {
-                    Log.d("ItemAdapter", "Invalid time format: $timeStr")
                     displayWarningAlertDialog(
                         itemAdapterContext,
                         R.string.invalid_time_entered_title,
@@ -345,12 +316,7 @@ class ItemAdapter(
                     return
                 }
                 timeStr = formatTimeString(timeStr)
-
                 val timeMillis: Long = convertMillisecondsToTimeString(timeStr)
-
-//             TODO: Remove test
-                Log.i("ItemAdapter", "Start timeMillis: $timeMillis")
-
                 countDownTime = timeMillis
                 countDownTimeLeft = countDownTime
 
@@ -381,8 +347,6 @@ class ItemAdapter(
                         timerItem.timerTime =
                             String.format("%02d:%02d:%02d:%02d", days, hours, minutes, seconds)
                         timerLabel.text = timerItem.timerTime
-
-                        Log.i("ItemAdapter", "CountDown: $timerItem")
                     }
 
                     override fun onFinish() {
@@ -390,23 +354,13 @@ class ItemAdapter(
                         timerItem.timeProgress = finishedProgressNumber
                         progressBar.progress = timerItem.timeProgress
                         timerItem.isRunning = !timerItem.isRunning
-
-
                         itemActionListener?.onItemRemoved(adapterPosition)
-//                    notifyDataSetChanged()
-
-                        // TODO : Remove test
-                        Log.i("ItemAdapter", "OnFinished Ended")
                     }
                 }.start()
             } else {
                 // Update textView with new time
                 countDownTimer?.cancel()
                 timerItem.isRunning = !timerItem.isRunning
-                Log.d(
-                    "ItemAdapter",
-                    "Time on cancel: count=$timerItem.isRunning - ${timerItem.timerTime}"
-                )
 //            itemActionListener?.onItemUpdated(item, holder.adapterPosition)
 //            notifyDataSetChanged()
             }
@@ -456,7 +410,5 @@ class ItemAdapter(
 
             return daysInMs + hoursInMs + minutesInMs + secondsInMs
         }
-
     }
-
 }
