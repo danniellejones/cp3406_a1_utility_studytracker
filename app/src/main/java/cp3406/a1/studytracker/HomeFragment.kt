@@ -229,6 +229,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
     }
 
     override fun onItemRemoved(position: Int) {
+//        timerItems.removeAt(position)
         studyTimerItems.removeAt(position)
         itemAdapter.updateTimerItemsToMatchStudyTimers()
         Log.d("HomeFragment", "Item Removed: $studyTimerItems $timerItems")
