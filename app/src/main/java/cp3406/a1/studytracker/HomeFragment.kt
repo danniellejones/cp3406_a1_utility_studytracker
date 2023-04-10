@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.*
 import android.widget.*
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.navigation.ui.NavigationUI
@@ -56,25 +55,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         // Load study time data from file
         loadStudyTimersFromFile()
         // Create a timer for each study timer item
-//        if (timerItems.isEmpty() || itemAdapter.itemCount != timerAdapter.itemCount) {
-//            for (studyTimer in studyTimerItems) {
-//                    val newTimerItem = TimerItem(studyTimer.studyTimerTime, false, startProgressNumber)
-//                    timerItems.add(newTimerItem)
-//                }
-//            }
-
-        if (timerItems.size != studyTimerItems.size) {
-            val difference = studyTimerItems.size - timerItems.size
-            if (difference > 0) {
-                for (i in timerItems.size until studyTimerItems.size) {
-                    val studyTimer = studyTimerItems[i]
-                    val newTimerItem = TimerItem(studyTimer.studyTimerTime, false, startProgressNumber)
-                    timerItems.add(newTimerItem)
-                }
-            } else {
-                timerItems.subList(timerItems.size + difference, timerItems.size).clear()
-            }
-        }
+        createTimerInstances()
 
         // Initialize Adapter for Study Timer
         itemAdapter = ItemAdapter(requireContext(), studyTimerItems, timerItems)
@@ -100,6 +81,22 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         return rootView
     }
 
+    private fun createTimerInstances() {
+        if (timerItems.size != studyTimerItems.size) {
+            val difference = studyTimerItems.size - timerItems.size
+            if (difference > 0) {
+                for (i in timerItems.size until studyTimerItems.size) {
+                    val studyTimer = studyTimerItems[i]
+                    val newTimerItem =
+                        TimerItem(studyTimer.studyTimerTime, false, startProgressNumber)
+                    timerItems.add(newTimerItem)
+                }
+            } else {
+                timerItems.subList(timerItems.size + difference, timerItems.size).clear()
+            }
+        }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         Log.i(
             "HomeFragment",
@@ -121,7 +118,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
     }
 
     private fun addNewStudyTimer() {
-        Log.i("HomeFragment", "addNewTimer: $studyTimerItems")
+        Log.i("HomeFragment", "addNewTimer: $studyTimerItems $timerItems")
         val inflaterForAddItem = LayoutInflater.from(requireContext())
         val viewForAddItem = inflaterForAddItem.inflate(R.layout.add_item, null)
 
@@ -227,14 +224,14 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
 
     override fun onItemUpdated(item: StudyTimer, position: Int) {
         studyTimerItems[position] = item
-//        itemAdapter.updateTimerItemsToMatchStudyTimers()
-        Log.d("HomeFragment", "Item Updated: $studyTimerItems")
+        itemAdapter.updateTimerItemsToMatchStudyTimers()
+        Log.d("HomeFragment", "Item Updated: $studyTimerItems $timerItems")
     }
 
     override fun onItemRemoved(position: Int) {
         studyTimerItems.removeAt(position)
-//        itemAdapter.updateTimerItemsToMatchStudyTimers()
-        Log.d("HomeFragment", "Item Removed: $studyTimerItems")
+        itemAdapter.updateTimerItemsToMatchStudyTimers()
+        Log.d("HomeFragment", "Item Removed: $studyTimerItems $timerItems")
     }
 
     override fun onItemClick(position: Int) {

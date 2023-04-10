@@ -114,6 +114,7 @@ class ItemAdapter(
 
         // Quick add hours and minutes from edit text views by pressing button
         holder.quickAddButton.setOnClickListener {
+            // TODO: Add error checking for if count down is running - warning dialog?
             addTimeFromQuickAdd(holder, item)
         }
     }
@@ -213,7 +214,7 @@ class ItemAdapter(
             togglePlayButton.setOnClickListener {
                 val selectedStudyTimer = studyTimerItems[adapterPosition]
                 val position = studyTimerItems.indexOf(selectedStudyTimer)
-                toggleCountDownPlay(timerItems[position])
+                toggleCountDown(timerItems[position])
             }
         }
 
@@ -320,7 +321,7 @@ class ItemAdapter(
         }
 
         /** Handle the start and finish of the count down timer */
-        private fun toggleCountDownPlay(
+        private fun toggleCountDown(
             timerItem: TimerItem
         ) {
             // Get string from text view, calculate milliseconds and start the timer
@@ -359,8 +360,12 @@ class ItemAdapter(
                         timerItem.timeProgress = updatedProgress
                         timerItem.timerTime =
                             String.format("%02d:%02d:%02d:%02d", days, hours, minutes, seconds)
+                        val position = timerItems.indexOf(timerItem)
+                        timeLabel.text = timerItem.timerTime
 
-                        notifyDataSetChanged()
+
+
+//                        notifyDataSetChanged()
                         Log.i(
                             "ItemAdapter",
                             "CountDown: $timerItem"
