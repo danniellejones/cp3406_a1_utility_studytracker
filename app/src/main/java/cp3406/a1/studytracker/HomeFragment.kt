@@ -59,7 +59,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
             timerItems.add(timerItem)
         }
         // Initialize Adapter for Study Timer
-        itemAdapter = ItemAdapter(requireContext(), studyTimeList)
+        itemAdapter = ItemAdapter(requireContext(), studyTimeList, timerItems)
         // Set up action listener for edit/remove clicks and play button clicks
         itemAdapter.setOnItemActionListener(this)
         itemAdapter.setOnItemClickListener(this)
@@ -129,7 +129,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
             // TODO: Repeated code: required to force update of recycler view
             //  - tried passing in as itemAdapter as parameter from onViewCreated
             //  - tried using recyclerView.adapter
-            itemAdapter = ItemAdapter(requireContext(), studyTimeList)
+            itemAdapter = ItemAdapter(requireContext(), studyTimeList, timerItems)
             recyclerView.adapter = itemAdapter
 
             Toast.makeText(requireContext(), "Adding", Toast.LENGTH_LONG).show()

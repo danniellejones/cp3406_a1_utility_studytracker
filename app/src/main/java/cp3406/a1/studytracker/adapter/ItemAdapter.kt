@@ -26,7 +26,8 @@ private const val finishedProgressNumber = 0
 /** Set up item adapter for recycle view */
 class ItemAdapter(
     val itemAdapterContext: Context,
-    private val dataset: MutableList<StudyTimer>,
+    private val studyTimerItems: MutableList<StudyTimer>,
+    private val timerItems: MutableList<TimerItem>
 
     ) :
     RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
@@ -69,13 +70,13 @@ class ItemAdapter(
 
     /** Get number of items in recycler view */
     override fun getItemCount(): Int {
-        return dataset.size
+        return studyTimerItems.size
     }
 
     /** Hold data to views, add time using quick add and toggle play timer on/off */
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
 
-        val item = dataset[position]
+        val item = studyTimerItems[position]
         holder.titleLabel.text = item.studyTimeTitle
         holder.timeLabel.text = item.studyTimerTime
 
@@ -176,20 +177,25 @@ class ItemAdapter(
             editRecyclerItemMenu.setOnClickListener { popupMenus(itemView) }
             val togglePlayButton: Button = itemView.findViewById(R.id.play_button)
 //            togglePlayButton.setOnClickListener { toggleCountDownPlay(timerItem) }
-            togglePlayButton.setOnClickListener { testFunction() }
+
+            togglePlayButton.setOnClickListener {
+                val selectedStudyTimer = studyTimerItems[adapterPosition]
+                val position = studyTimerItems.indexOf(selectedStudyTimer)
+                toggleCountDownPlay(timerItems[position])
+            }
         }
 
-        private fun testFunction() {
-            val position = dataset[adapterPosition]
+        private fun testFunction(any: Any) {
+            val position = studyTimerItems[adapterPosition]
             itemActionListener?.onItemUpdated(position, adapterPosition)
-            Log.i("ItemAdapter", "Test Function")
+            Log.i("ItemAdapter", "Test Function $any")
         }
 
         /** Create popup menu for edit and remove interactions */
         private fun popupMenus(viewForPopup: View) {
 
             // Get menu, text and views to be able to remove/edit recycler item
-            val position = dataset[adapterPosition]
+            val position = studyTimerItems[adapterPosition]
             val popupMenus = PopupMenu(itemAdapterContext, viewForPopup)
             popupMenus.inflate(R.menu.edit_menu)
             popupMenus.setOnMenuItemClickListener {
@@ -251,7 +257,7 @@ class ItemAdapter(
                             .setIcon(R.drawable.warning_icon)
                             .setMessage(R.string.confirm_delete_message)
                             .setPositiveButton(R.string.confirm) { dialog, _ ->
-                                dataset.removeAt(adapterPosition)  // Remove item from data
+                                studyTimerItems.removeAt(adapterPosition)  // Remove item from data
                                 itemActionListener?.onItemRemoved(adapterPosition)  // Remove item from recycler view
                                 notifyDataSetChanged()
                                 Toast.makeText(
