@@ -206,17 +206,17 @@ class ItemAdapter(
         val inputMinutes: EditText? = itemView.findViewById(R.id.input_minute)
         val quickAddButton: Button = itemView.findViewById(R.id.quick_add_button)
         var progressBar: ProgressBar = itemView.findViewById(R.id.progress_bar)
+        val togglePlayButton: Button = itemView.findViewById(R.id.play_button)
 
         init {
             val editRecyclerItemMenu: TextView = itemView.findViewById(R.id.edit_or_remove_menu)
             editRecyclerItemMenu.setOnClickListener { popupMenus(itemView) }
-            val togglePlayButton: Button = itemView.findViewById(R.id.play_button)
-//            togglePlayButton.setOnClickListener { toggleCountDownPlay(timerItem) }
+
 
             togglePlayButton.setOnClickListener {
                 val selectedStudyTimer = studyTimerItems[adapterPosition]
                 val position = studyTimerItems.indexOf(selectedStudyTimer)
-                togglePlayButton.setBackgroundResource(if (timerItems[position].isRunning) R.drawable.stop_icon else R.drawable.play_icon)
+
                 toggleCountDown(timerItems[position])
             }
         }
@@ -329,6 +329,8 @@ class ItemAdapter(
         ) {
             // Get string from text view, calculate milliseconds and start the timer
             if (!timerItem.isRunning) {
+                timerItem.isRunning = !timerItem.isRunning
+
                 var timeStr = timerLabel.text.toString().trim()
                 if (!isValidTime(timeStr)) {
                     Log.d("ItemAdapter", "Invalid time format: $timeStr")
@@ -372,10 +374,6 @@ class ItemAdapter(
                             ) - TimeUnit.HOURS.toSeconds(hours) - TimeUnit.DAYS.toSeconds(days)
 
                         // Update progress bar and time
-//                        val updatedProgress =
-//                            (((countDownTimeLeft.toFloat() / countDownTime) * 100)).toInt()
-//                        timerItem.timeProgress = updatedProgress
-
                         timerItem.timeProgress =
                             ((((countDownTimeLeft.toFloat()) / countDownTime) * 100)).toInt()
                         progressBar.progress = timerItem.timeProgress
@@ -391,6 +389,7 @@ class ItemAdapter(
                         // Set progress to zero and allow chance to edit, if not item is auto-removed
                         timerItem.timeProgress = finishedProgressNumber
                         progressBar.progress = timerItem.timeProgress
+                        timerItem.isRunning = !timerItem.isRunning
 
 
                         itemActionListener?.onItemRemoved(adapterPosition)
@@ -403,6 +402,7 @@ class ItemAdapter(
             } else {
                 // Update textView with new time
                 countDownTimer?.cancel()
+                timerItem.isRunning = !timerItem.isRunning
                 Log.d(
                     "ItemAdapter",
                     "Time on cancel: count=$timerItem.isRunning - ${timerItem.timerTime}"
@@ -410,6 +410,7 @@ class ItemAdapter(
 //            itemActionListener?.onItemUpdated(item, holder.adapterPosition)
 //            notifyDataSetChanged()
             }
+            togglePlayButton.setBackgroundResource(if (timerItem.isRunning) R.drawable.stop_icon else R.drawable.play_icon)
         }
 
         /** Check for valid time string format */
