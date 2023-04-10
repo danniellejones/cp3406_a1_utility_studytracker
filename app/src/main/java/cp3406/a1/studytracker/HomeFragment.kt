@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.*
 import android.widget.*
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.navigation.ui.NavigationUI
@@ -39,7 +40,7 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
 
     // Data and Settings
     private lateinit var sharedPreferences: SharedPreferences
-    private var studyTimeList: ArrayList<StudyTimer> = ArrayList()
+    private var studyTimerItems: ArrayList<StudyTimer> = ArrayList()
     private var timerItems: ArrayList<TimerItem> = ArrayList()
 
     /** Inflates the fragment_home layout, adds list_item layout to view and sets default from settings */
@@ -51,20 +52,37 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         // Inflate the layout containing the recycler view and set up shared preferences
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
         val rootView = inflater.inflate(R.layout.fragment_home, container, false)
-        // Populate list with data from last session
-        loadList()
+
+        // Load study time data from file
+        loadStudyTimersFromFile()
         // Create a timer for each study timer item
-        for (studyTimer in studyTimeList) {
-            val timerItem = TimerItem(studyTimer.studyTimerTime, false, startProgressNumber)
-            timerItems.add(timerItem)
+//        if (timerItems.isEmpty() || itemAdapter.itemCount != timerAdapter.itemCount) {
+//            for (studyTimer in studyTimerItems) {
+//                    val newTimerItem = TimerItem(studyTimer.studyTimerTime, false, startProgressNumber)
+//                    timerItems.add(newTimerItem)
+//                }
+//            }
+
+        if (timerItems.size != studyTimerItems.size) {
+            val difference = studyTimerItems.size - timerItems.size
+            if (difference > 0) {
+                for (i in timerItems.size until studyTimerItems.size) {
+                    val studyTimer = studyTimerItems[i]
+                    val newTimerItem = TimerItem(studyTimer.studyTimerTime, false, startProgressNumber)
+                    timerItems.add(newTimerItem)
+                }
+            } else {
+                timerItems.subList(timerItems.size + difference, timerItems.size).clear()
+            }
         }
+
         // Initialize Adapter for Study Timer
-        itemAdapter = ItemAdapter(requireContext(), studyTimeList, timerItems)
+        itemAdapter = ItemAdapter(requireContext(), studyTimerItems, timerItems)
         // Set up action listener for edit/remove clicks and play button clicks
         itemAdapter.setOnItemActionListener(this)
         itemAdapter.setOnItemClickListener(this)
         // Initialize Adapter for Timer
-        timerAdapter = TimerAdapter(timerItems, itemAdapter)
+        timerAdapter = TimerAdapter(timerItems, itemAdapter, studyTimerItems)
         // Set up recycler view
         recyclerView = rootView.findViewById(R.id.tracker_recycler_view) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -72,15 +90,21 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         recyclerView.adapter = itemAdapter
         floatingAddButton =
             rootView.findViewById(R.id.floating_add_button)
-        floatingAddButton.setOnClickListener { addNewTimer() }
+        floatingAddButton.setOnClickListener { addNewStudyTimer() }
 
-        Log.i("HomeFragment", "OnCreateView: count=${timerAdapter.itemCount} timerItems=${timerItems}")
+        Log.i(
+            "HomeFragment",
+            "OnCreateView: count=${timerAdapter.itemCount} timerItems=${timerItems}"
+        )
 
         return rootView
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        Log.i("HomeFragment", "OnViewCreated: count=${itemAdapter.itemCount} studyTimers=$studyTimeList")
+        Log.i(
+            "HomeFragment",
+            "OnViewCreated: count=${itemAdapter.itemCount} studyTimers=$studyTimerItems"
+        )
         super.onViewCreated(view, savedInstanceState)
     }
 
@@ -96,13 +120,8 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
         ) || super.onOptionsItemSelected(item)
     }
 
-    override fun onStart() {
-        super.onStart()
-//        Log.i("HomeFragment", "onStart called")
-    }
-
-    private fun addNewTimer() {
-        Log.i("HomeFragment", "addNewTimer: $studyTimeList")
+    private fun addNewStudyTimer() {
+        Log.i("HomeFragment", "addNewTimer: $studyTimerItems")
         val inflaterForAddItem = LayoutInflater.from(requireContext())
         val viewForAddItem = inflaterForAddItem.inflate(R.layout.add_item, null)
 
@@ -122,20 +141,20 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
                 timer = sharedPreferences.getString("default_time_key", "").toString()
             }
 
-            studyTimeList.add(StudyTimer(title, timer))
-            recyclerView.layoutManager?.scrollToPosition(studyTimeList.size - 1)
-            itemAdapter.notifyItemInserted(studyTimeList.size - 1)
+            studyTimerItems.add(StudyTimer(title, timer))
+            recyclerView.layoutManager?.scrollToPosition(studyTimerItems.size - 1)
+            itemAdapter.notifyItemInserted(studyTimerItems.size - 1)
+//            itemAdapter.updateTimerItemsToMatchStudyTimers()
 
             // TODO: Repeated code: required to force update of recycler view
             //  - tried passing in as itemAdapter as parameter from onViewCreated
             //  - tried using recyclerView.adapter
-            itemAdapter = ItemAdapter(requireContext(), studyTimeList, timerItems)
+            itemAdapter = ItemAdapter(requireContext(), studyTimerItems, timerItems)
             recyclerView.adapter = itemAdapter
 
-            Toast.makeText(requireContext(), "Adding", Toast.LENGTH_LONG).show()
             dialog.dismiss()
         }
-        addDialog.setNegativeButton("Cancel") { dialog, _ ->
+        addDialog.setNegativeButton(R.string.cancel) { dialog, _ ->
             dialog.dismiss()
         }
         addDialog.create()
@@ -143,51 +162,49 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
     }
 
     /** Save data to json file from data used in recycler view. */
-    private fun saveList() {
+    private fun saveStudyTimersToFile() {
         val editor = sharedPreferences.edit()
         val gson = Gson()
-        val json = gson.toJson(studyTimeList)
+        val json = gson.toJson(studyTimerItems)
         editor.putString("studyTimeList", json)
         editor.apply()
-        Log.i("HomeFragment", "Saved: $studyTimeList")
+        Log.i("HomeFragment", "Saved: $studyTimerItems")
     }
 
     /** Load data from json file to populate recycler view. */
-    private fun loadList() {
+    private fun loadStudyTimersFromFile() {
         val gson = Gson()
         val json = sharedPreferences.getString("studyTimeList", null)
         val type = object : TypeToken<ArrayList<StudyTimer>>() {}.type
-        studyTimeList = gson.fromJson(json, type) ?: ArrayList()
-        Log.i("HomeFragment", "Loaded: $studyTimeList")
+        studyTimerItems = gson.fromJson(json, type) ?: ArrayList()
+        Log.i("HomeFragment", "Loaded: $studyTimerItems")
     }
 
     override fun onResume() {
         super.onResume()
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
         updateRecyclerView()
-        Log.i("HomeFragment", "onResume: studyTimers=$studyTimeList timerItems=${timerItems}")
+        Log.i("HomeFragment", "onResume: studyTimers=$studyTimerItems timerItems=${timerItems}")
     }
 
     override fun onPause() {
         super.onPause()
-        Log.i("HomeFragment", "onPause called: $studyTimeList")
-        saveList()
+        Log.i("HomeFragment", "onPause called: $studyTimerItems")
+        saveStudyTimersToFile()
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
     }
 
     override fun onStop() {
         super.onStop()
-        Log.i("HomeFragment", "onStop: studyTimers=$studyTimeList timerItems=${timerItems}")
+        Log.i("HomeFragment", "onStop: studyTimers=$studyTimerItems timerItems=${timerItems}")
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        Log.i("HomeFragment", "onDestroyView: studyTimers=$studyTimeList timerItems=${timerItems}")
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        Log.i("HomeFragment", "onDetach: studyTimers=$studyTimeList timerItems=${timerItems}")
+        Log.i(
+            "HomeFragment",
+            "onDestroyView: studyTimers=$studyTimerItems timerItems=${timerItems}"
+        )
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
@@ -203,19 +220,21 @@ class HomeFragment : Fragment(), SharedPreferences.OnSharedPreferenceChangeListe
 
     @SuppressLint("NotifyDataSetChanged")
     private fun updateRecyclerView() {
-        loadList()
+        loadStudyTimersFromFile()
         itemAdapter.notifyDataSetChanged()
 //        Log.i("HomeFragment", "updateRecyclerView: $studyTimeList")
     }
 
     override fun onItemUpdated(item: StudyTimer, position: Int) {
-        studyTimeList[position] = item
-        Log.d("HomeFragment", "Item Updated: $studyTimeList")
+        studyTimerItems[position] = item
+//        itemAdapter.updateTimerItemsToMatchStudyTimers()
+        Log.d("HomeFragment", "Item Updated: $studyTimerItems")
     }
 
     override fun onItemRemoved(position: Int) {
-        studyTimeList.removeAt(position)
-        Log.d("HomeFragment", "Item Removed: $studyTimeList")
+        studyTimerItems.removeAt(position)
+//        itemAdapter.updateTimerItemsToMatchStudyTimers()
+        Log.d("HomeFragment", "Item Removed: $studyTimerItems")
     }
 
     override fun onItemClick(position: Int) {

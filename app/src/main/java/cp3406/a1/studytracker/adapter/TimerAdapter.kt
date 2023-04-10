@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import cp3406.a1.studytracker.R
 import cp3406.a1.studytracker.displayWarningAlertDialog
+import cp3406.a1.studytracker.model.StudyTimer
 import cp3406.a1.studytracker.model.TimerItem
 import java.util.concurrent.TimeUnit
 
@@ -21,7 +22,8 @@ private const val maxProgress = 100
 
 class TimerAdapter(
     private val timerItems: ArrayList<TimerItem>,
-    private val itemAdapter: ItemAdapter
+    private val itemAdapter: ItemAdapter,
+    private val studyTimerItems: MutableList<StudyTimer>
 ) : RecyclerView.Adapter<TimerAdapter.TimerViewHolder>() {
 
 //    // Count down timer
@@ -38,6 +40,7 @@ class TimerAdapter(
 
     override fun onBindViewHolder(holder: TimerViewHolder, position: Int) {
         val timerItem = timerItems[position]
+        val studyTimer = studyTimerItems[position]
         holder.bind(timerItem)
         Log.i("TimerAdapter", "onBindViewHolder")
     }

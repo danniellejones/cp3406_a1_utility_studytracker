@@ -22,6 +22,7 @@ import cp3406.a1.studytracker.model.TimerItem
 import java.util.concurrent.TimeUnit
 
 private const val finishedProgressNumber = 0
+private const val startProgressNumber = 100
 
 /** Set up item adapter for recycle view */
 class ItemAdapter(
@@ -29,12 +30,13 @@ class ItemAdapter(
     private val studyTimerItems: MutableList<StudyTimer>,
     private val timerItems: MutableList<TimerItem>
 
-    ) :
+) :
     RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
 
     private var itemClickListener: OnItemClickListener? = null
     private var itemActionListener: OnItemActionListener? = null
     private lateinit var sharedPreferences: SharedPreferences
+
     // Count down timer
     private var countDownTimer: CountDownTimer? = null
     private var countDownTime: Long = 0
@@ -50,13 +52,43 @@ class ItemAdapter(
         fun onItemClick(position: Int)
     }
 
+    fun updateTimerItemsToMatchStudyTimers() {
+        timerItems.clear()
+        for (studyTimerItem in studyTimerItems) {
+            val timerItem = TimerItem(studyTimerItem.studyTimerTime, false, startProgressNumber)
+            timerItems.add(timerItem)
+        }
+        notifyDataSetChanged()
+    }
+
+    fun updateStudyTimerTimeToTimerTime() {
+        for (studyTimerItem in studyTimerItems) {
+            for (timerItem in timerItems) {
+                val position = studyTimerItems.indexOf(studyTimerItem)
+                val selectedTimerItem = timerItems[position]
+                studyTimerItem.studyTimerTime = selectedTimerItem.timerTime
+            }
+            notifyDataSetChanged()
+        }
+    }
+
+
     fun setOnItemClickListener(listener: OnItemClickListener) {
         itemClickListener = listener
     }
 
+//    fun updateTimerItems() {
+//        timerItems.clear()
+//        for (studyTimer in timerItems) {
+//            val timerItem = TimerItem(studyTimer.timerTime, false, startProgressNumber)
+//            timerItems.add(timerItem)
+//        }
+//        notifyDataSetChanged()
+//    }
+
 
     /** Listen for updates to the itemAdapter */
-    fun setOnItemActionListener(listener: OnItemActionListener) {
+    fun setOnItemActionListener(listener: ItemAdapter.OnItemActionListener) {
         itemActionListener = listener
     }
 
@@ -191,6 +223,7 @@ class ItemAdapter(
             Log.i("ItemAdapter", "Test Function $any")
         }
 
+
         /** Create popup menu for edit and remove interactions */
         private fun popupMenus(viewForPopup: View) {
 
@@ -296,7 +329,7 @@ class ItemAdapter(
                 val timeMillis: Long = convertMillisecondsToTimeString(timeStr)
 
 //             TODO: Remove test
-                Log.i("ItemAdapter", "timeMillis: $timeMillis")
+                Log.i("ItemAdapter", "Start timeMillis: $timeMillis")
 
                 countDownTime = timeMillis
                 countDownTimeLeft = countDownTime
@@ -322,16 +355,17 @@ class ItemAdapter(
 
                         // Update progress bar and time
                         val updatedProgress =
-                            (((millisUntilFinished.toFloat() / countDownTime) * 100)).toInt()
+                            (((countDownTimeLeft.toFloat() / countDownTime) * 100)).toInt()
                         timerItem.timeProgress = updatedProgress
                         timerItem.timerTime =
                             String.format("%02d:%02d:%02d:%02d", days, hours, minutes, seconds)
 
+                        notifyDataSetChanged()
                         Log.i(
                             "ItemAdapter",
-                            "$timerItem.timeProgress $timerItem.timerTime $timerItem.isRunning"
+                            "CountDown: $timerItem"
                         )
-//                    notifyDataSetChanged()
+
                     }
 
                     override fun onFinish() {
